@@ -321,12 +321,12 @@ end
 
 function Update()
   local AUTO_UPDATE = true
-  local UPDATE_HOST = "nebelwolfi.tk"
-  local UPDATE_PATH = "/bol/Aimbot.lua".."?no-cache="..math.random(1,10000)
+  local UPDATE_HOST = "raw.githubusercontent.com"
+  local UPDATE_PATH = "/nebelwolfi/BoL/master/Aimbot.lua".."?no-cache="..math.random(1,10000)
   local UPDATE_FILE_PATH = SCRIPT_PATH.."Aimbot.lua"
   local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
   if AUTO_UPDATE then
-    local AimbotServerData = GetWebResult(UPDATE_HOST, "/bol/Aimbot.version".."?no-cache="..math.random(1,10000))
+    local AimbotServerData = GetWebResult(UPDATE_HOST, "/nebelwolfi/BoL/master/Aimbot.version".."?no-cache="..math.random(1,10000))
     if AimbotServerData then
       AimbotServerVersion = type(tonumber(AimbotServerData)) == "number" and tonumber(AimbotServerData) or nil
       if AimbotServerVersion then

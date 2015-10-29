@@ -38,7 +38,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 
 function UPL:__init()
   if not _G.UPLloaded then
-    _G.UPLversion = 3
+    _G.UPLversion = 4
     _G.UPLautoupdate = true
     _G.UPLloaded = false
     self.ActiveP = 1
@@ -111,12 +111,12 @@ function UPL:__init()
 end
 
 function UPL:Update()
-  local UPL_UPDATE_HOST = "nebelwolfi.tk"
-  local UPL_UPDATE_PATH = "/bol/Common/UPL.lua"
+  local UPL_UPDATE_HOST = "raw.githubusercontent.com"
+  local UPL_UPDATE_PATH = "/nebelwolfi/BoL/master/Common/UPL.lua"
   local UPL_UPDATE_FILE_PATH = LIB_PATH.."UPL.lua"
   local UPL_UPDATE_URL = "https://"..UPL_UPDATE_HOST..UPL_UPDATE_PATH
   if UPLautoupdate then
-    local UPLServerData = GetWebResult(UPL_UPDATE_HOST, "/bol/Common/UPL.version")
+    local UPLServerData = GetWebResult(UPL_UPDATE_HOST, "/nebelwolfi/BoL/master/Common/UPL.version")
     if UPLServerData then
       UPLServerVersion = type(tonumber(UPLServerData)) == "number" and tonumber(UPLServerData) or nil
       if UPLServerVersion then

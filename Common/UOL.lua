@@ -43,12 +43,12 @@ function UOL:Msg(msg)
 end
 
 function UOL:Update()
-  local UOL_UPDATE_HOST = "nebelwolfi.tk"
-  local UOL_UPDATE_PATH = "/bol/Common/UOL.lua"
+  local UOL_UPDATE_HOST = "raw.githubusercontent.com"
+  local UOL_UPDATE_PATH = "/nebelwolfi/BoL/master/Common/UOL.lua"
   local UOL_UPDATE_FILE_PATH = LIB_PATH.."UOL.lua"
   local UOL_UPDATE_URL = "https://"..UOL_UPDATE_HOST..UOL_UPDATE_PATH
   if UOLautoupdate then
-    local UOLServerData = GetWebResult(UOL_UPDATE_HOST, "/bol/Common/UOL.version")
+    local UOLServerData = GetWebResult(UOL_UPDATE_HOST, "/nebelwolfi/BoL/master/Common/UOL.version")
     if UOLServerData then
       UOLServerVersion = type(tonumber(UOLServerData)) == "number" and tonumber(UOLServerData) or nil
       if UOLServerVersion then

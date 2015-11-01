@@ -7992,7 +7992,7 @@ class "Yorick"
         if Config.Windwall and spellData and spellData[unit.charName] then
           local data = spellData[unit.charName]
           for _=0, 3 do
-            if Config.Windwall[unit.charName..str[_]] and data[_] and data[_].name and data[_].name ~= "" and data[_].width and (data[_].name:lower():find(spell.name:lower()) or spell.name:lower():find(data[_].name:lower())) then
+            if Config.Windwall[unit.charName..str[_]] and data[_] ~= nil and data[_].name and data[_].name ~= "" and data[_].width ~= nil and type(data[_].width) == "number" and (data[_].name:lower():find(spell.name:lower()) or spell.name:lower():find(data[_].name:lower())) then
               if data[_].type == "circular" then
                 if GetDistance(spell.endPos) < data[_].width then
                   local wPos = myHero + (Vector(unit) - myHero):normalized() * myHeroSpellData[1].range 

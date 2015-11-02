@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.39
+ScriptologyVersion       = 2.4
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -17,9 +17,9 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     if ScriptologyLoadAwareness then LoadAwareness() end
     if ScriptologyLoadEvade then LoadEvade() end
     LoadOrbwalker()
-    if VIP_USER then
+    --if VIP_USER then
       EmoteSpammer()
-    end
+    --end
     LoadChampion()
     Msg("Loaded! (v"..ScriptologyVersion..")")
     OnAfterLoad()
@@ -3436,7 +3436,7 @@ class "Yorick"
 -- {
 
   function EmoteSpammer:__init()
-    self.offsets = { 0xC5, 0x45, 0x85, 0x15, 0x95, }
+    self.offsets = { "/joke", "/taunt", "/dance", "/laugh", "/toggle" }--0xC5, 0x45, 0x85, 0x15, 0x95, }
     ScriptologyConfig:addSubMenu("EmoteSpammer", "EmoteSpammer")
     self.Config = ScriptologyConfig.EmoteSpammer
     self.Config:addDynamicParam("joke", "Joke", SCRIPT_PARAM_ONOFF, false)
@@ -3470,12 +3470,13 @@ class "Yorick"
   end
 
   function EmoteSpammer:Cast(emote)
-    local p = CLoLPacket(0xCD)
+    SendChat(self.offsets[emote])
+    --[[local p = CLoLPacket(0xCD)
     p.vTable = 0xDC1588
     p:EncodeF(myHero.networkID)
     p:Encode1(self.offsets[emote])
     p:Encode4(0x72EF5006)
-    SendPacket(p)
+    SendPacket(p)]]
   end
 
 -- }
@@ -6410,7 +6411,7 @@ class "Yorick"
 
   function Riven:CreateObj(object)
     if object and object.valid and object.name and GetDistance(object) < 150 and object.name:find("Riven_Base_Q_") and object.name:find("_detonate") and self.doQ then
-      if VIP_USER and myHero.level >= 5 then
+      if myHero.level >= 5 then
         self.CastDance()
       else
         myHero:MoveTo(mousePos.x, mousePos.z)
@@ -6436,12 +6437,13 @@ class "Yorick"
   end
 
   function Riven:CastDance()
-    local p = CLoLPacket(0xCD)
+    SendChat("/d")
+    --[[local p = CLoLPacket(0xCD)
     p.vTable = 0xDC1588
     p:EncodeF(myHero.networkID)
     p:Encode1(0xC5)
     p:Encode4(0x72EF5006)
-    SendPacket(p)
+    SendPacket(p)]]
   end
 
   function Riven:CalculateDamage()

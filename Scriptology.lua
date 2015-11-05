@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.4
+ScriptologyVersion       = 2.42
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -2934,7 +2934,7 @@ class "Yorick"
     for _, minion in pairs(Mobs.objects) do
       if minion and not minion.dead and minion.visible and minion.bTargetable then  
         local EMinionDmg = GetDmg(_E, myHero, minion)  
-        if (UnitHaveBuff(minion, "poison") or Config.Misc.Enp) and EMinionDmg >= GetRealHealth(minion) and GetDistanceSqr(minion) < myHeroSpellData[2].range^2 then
+        if (UnitHaveBuff(minion, "poison") or UnitHaveBuff(minion, "venom") or Config.Misc.Enp) and EMinionDmg >= GetRealHealth(minion) and GetDistanceSqr(minion) < myHeroSpellData[2].range^2 then
           CastSpell(_E, minion)
         end
       end
@@ -2976,7 +2976,7 @@ class "Yorick"
       for i, minion in pairs(Mobs.objects) do 
         if minion and not minion.dead and minion.visible and minion.bTargetable then
           local EMinionDmg = GetDmg(_E, myHero, minion)  
-          if (UnitHaveBuff(minion, "poison") or UnitHaveBuff(minion, "twitchdeadlyvenom") or Config.LastHit.Enp) and EMinionDmg >= GetRealHealth(minion) and GetDistanceSqr(minion) < myHeroSpellData[2].range^2 then
+          if (UnitHaveBuff(minion, "poison") or UnitHaveBuff(minion, "venom") or Config.LastHit.Enp) and EMinionDmg >= GetRealHealth(minion) and GetDistanceSqr(minion) < myHeroSpellData[2].range^2 then
             CastSpell(_E, minion)
           end   
         end
@@ -2988,7 +2988,7 @@ class "Yorick"
     if myHero:CanUseSpell(_Q) == READY and Config.Combo.Q and GetDistance(Target) < myHeroSpellData[0].range then
       Cast(_Q, Target)
     end
-    if UnitHaveBuff(Target, "poison") or UnitHaveBuff(Target, "twitchdeadlyvenom") then
+    if UnitHaveBuff(Target, "poison") or UnitHaveBuff(Target, "venom") then
       if myHero:CanUseSpell(_E) == READY and self.lastE < os.clock() and Config.Combo.E and GetDistance(Target) < myHeroSpellData[2].range then
         CastSpell(_E, Target)
       end
@@ -3027,7 +3027,7 @@ class "Yorick"
           Cast(_W, enemy)
         elseif sReady[_E] and health < GetDmg(_E, myHero, enemy) and Config.Killsteal.E and GetDistance(enemy) < myHeroSpellData[2].range then
           CastSpell(_E, enemy)
-        elseif sReady[_E] and health < GetDmg(_E, myHero, enemy)*2 and UnitHaveBuff(enemy, "poison") and Config.Killsteal.E and GetDistance(enemy) < myHeroSpellData[2].range then
+        elseif sReady[_E] and health < GetDmg(_E, myHero, enemy)*2 and (UnitHaveBuff(enemy, "poison") or UnitHaveBuff(Target, "twitchdeadlyvenom")) and Config.Killsteal.E and GetDistance(enemy) < myHeroSpellData[2].range then
           CastSpell(_E, enemy)
           DelayAction(CastSpell, 0.545, {_E, enemy})
         elseif sReady[_R] and health < GetDmg(_R, myHero, enemy) and Config.Killsteal.R and GetDistance(enemy) < myHeroSpellData[3].range then
@@ -4309,11 +4309,6 @@ class "Yorick"
     if Config.Combo.E and sReady[_E] then
       Cast(_E, Target)
     end
-    if myHero:CanUseSpell(_W) == 32 or not Config.Combo.W then
-      if Config.Combo.Q and sReady[_Q] then
-        Cast(_Q, Target)
-      end
-    end
     if Config.Combo.R and sReady[_R] and 100*myHero.health/myHero.maxHealth >= Config.Combo.healthR then
       Cast(_R, Target)
     elseif Config.Combo.Q and sReady[_Q] and GetDistance(Target) > myHero.range then
@@ -4336,12 +4331,7 @@ class "Yorick"
     if Config.Harass.E and sReady[_E] and 100*myHero.mana/myHero.maxMana >= Config.Harass.manaE then
       Cast(_E, Target)
     end
-    if myHero:CanUseSpell(_W) == 32 or not Config.Harass.W then
-      if Config.Harass.Q and sReady[_Q] and 100*myHero.mana/myHero.maxMana >= Config.Harass.manaQ then
-        Cast(_Q, Target)
-      end
-    end
-    if Config.Harass.Q and sReady[_Q] and GetDistance(Target) > myHero.range and 100*myHero.mana/myHero.maxMana >= Config.Harass.manaQ then
+    if Config.Harass.Q and sReady[_Q] and 100*myHero.mana/myHero.maxMana >= Config.Harass.manaQ then
       Cast(_Q, Target)
     end
   end

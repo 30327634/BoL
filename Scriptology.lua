@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.42
+ScriptologyVersion       = 2.421
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -3436,7 +3436,6 @@ class "Yorick"
 -- {
 
   function EmoteSpammer:__init()
-    self.offsets = { "/joke", "/taunt", "/dance", "/laugh", "/toggle" }--0xC5, 0x45, 0x85, 0x15, 0x95, }
     ScriptologyConfig:addSubMenu("EmoteSpammer", "EmoteSpammer")
     self.Config = ScriptologyConfig.EmoteSpammer
     self.Config:addDynamicParam("joke", "Joke", SCRIPT_PARAM_ONOFF, false)
@@ -3453,30 +3452,24 @@ class "Yorick"
     if self.tick + self.Config.time > os.clock() then return end
     self.tick = os.clock()
     if self.Config.joke then
-      self:Cast(1)
-    end
-    if self.Config.taunt then
-      self:Cast(2)
-    end
-    if self.Config.dance then
       self:Cast(3)
     end
+    if self.Config.taunt then
+      self:Cast(1)
+    end
+    if self.Config.dance then
+      self:Cast(0)
+    end
     if self.Config.laugh then
-      self:Cast(4)
+      self:Cast(2)
     end
     if self.Config.toggle then
-      self:Cast(5)
+      self:Cast(4)
     end
   end
 
   function EmoteSpammer:Cast(emote)
-    SendChat(self.offsets[emote])
-    --[[local p = CLoLPacket(0xCD)
-    p.vTable = 0xDC1588
-    p:EncodeF(myHero.networkID)
-    p:Encode1(self.offsets[emote])
-    p:Encode4(0x72EF5006)
-    SendPacket(p)]]
+    DoEmote(emote)
   end
 
 -- }
@@ -6205,6 +6198,7 @@ class "Yorick"
     Config.Misc:addParam("Wae", "Auto stun if X enemies", SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
     Config.Misc:addDynamicParam("Flee", "Flee", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("G"))
     Config.Misc:addDynamicParam("Jump", "Wall Jump", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("Z"))
+    Config.Misc:addParam("JumpE", "Use E to WallJump", SCRIPT_PARAM_ONOFF, true)
     AddGapcloseCallback(_W, myHeroSpellData[1].range, false, Config.Misc)
   end
 
@@ -6242,15 +6236,21 @@ class "Yorick"
       self.jumpPos = myHero + (Vector(mousePos) - myHero):normalized() * 75
       self.jumpPos2 = myHero + (Vector(mousePos) - myHero):normalized() * 165
       self.movePos = myHero + (Vector(mousePos) - myHero):normalized() * 450
+      self.movePos2 = myHero + (Vector(mousePos) - myHero):normalized() * 275
       if self.QCast < 2 then
         Cast(_Q, self.jumpPos2)
+      else
+        if IsWall(D3DXVECTOR3(self.movePos2.x,self.movePos2.y,self.movePos2.z)) then
+          if Config.Misc.JumpE then CastSpell(_E, self.movePos2.x, self.movePos2.z) end
+        end
       end
       if not IsWall(D3DXVECTOR3(self.jumpPos.x,self.jumpPos.y,self.jumpPos.z)) then
         myHero:MoveTo(self.jumpPos2.x, self.jumpPos2.z)
       else
         if not IsWall(D3DXVECTOR3(self.movePos.x,self.movePos.y,self.movePos.z)) then
+          if Config.Misc.JumpE then CastSpell(_E, self.movePos.x, self.movePos.z) end
           CastSpell(_Q, self.movePos.x, self.movePos.z)
-        end
+        end 
       end
     end
     if sReady[_W] and (Config.Misc.Wae <= EnemiesAround(myHero, myHeroSpellData[_W].width)) then
@@ -6427,13 +6427,7 @@ class "Yorick"
   end
 
   function Riven:CastDance()
-    SendChat("/d")
-    --[[local p = CLoLPacket(0xCD)
-    p.vTable = 0xDC1588
-    p:EncodeF(myHero.networkID)
-    p:Encode1(0xC5)
-    p:Encode4(0x72EF5006)
-    SendPacket(p)]]
+    DoEmote(0)
   end
 
   function Riven:CalculateDamage()

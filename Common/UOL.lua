@@ -246,7 +246,7 @@ end
 
 function UOL:GetTarget()
   if isSAC then
-    return _G.AutoCarry.Crosshair.Attack_Crosshair.target stehen
+    return _G.AutoCarry.Crosshair.Attack_Crosshair.target
   elseif isNOW then
     return _G.NebelwolfisOrbWalker:GetTarget()
   elseif isSxOrb then

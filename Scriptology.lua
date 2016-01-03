@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.421
+ScriptologyVersion       = 2.422
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -2414,24 +2414,12 @@ class "Yorick"
   end
 
   function Azir:Flee()
-    myHero:MoveTo(mousePos.x, mousePos.z)
-    if self.soldierToDash then
-      local movePos = myHero + (Vector(mousePos) - myHero):normalized() * myHeroSpellData[0].range
-      if movePos then
-        CastSpell(_E, self.soldierToDash)
-        CastSpell(_Q, movePos.x, movePos.z)
-      end
-    elseif self:CountSoldiers() > 0 then
-      for _,k in pairs(self:GetSoldiers()) do
-        if not self.soldierToDash then
-          self.soldierToDash = k
-        elseif self.soldierToDash and GetDistanceSqr(k,mousePos) < GetDistanceSqr(self.soldierToDash,mousePos) then
-          self.soldierToDash = k
-        end
-      end
-    elseif myHero:GetSpellData(_W).currentCd == READY and myHero:GetSpellData(_E).currentCd == 0 and myHero:GetSpellData(_Q).currentCd == 0 then
+    if myHero:CanUseSpell(_W) == READY and myHero:CanUseSpell(_E) == READY and myHero:CanUseSpell(_Q) == READY and myHero.mana > 169 then
       local movePos = myHero + (Vector(mousePos) - myHero):normalized() * myHeroSpellData[1].range
       CastSpell(_W, movePos.x, movePos.z)
+    elseif self:CountSoldiers() > 0 and myHero:CanUseSpell(_E) == READY and myHero:CanUseSpell(_Q) == READY and myHero.mana > 129 then
+      CastSpell(_E)
+      CastSpell(_Q, mousePos.x, mousePos.z)
     end
   end
 

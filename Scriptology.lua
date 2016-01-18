@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.422
+ScriptologyVersion       = 2.423
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -132,6 +132,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     function LoadOrbwalker()
       --if myHero.charName == "Riven" then return end
       if _G.Reborn_Loaded or _G.AutoCarry then
+      elseif _Pewalk then
       elseif _G.MMA_Loaded or _G.MMA_Version then
       elseif _G.NebelwolfisOrbWalkerInit or _G.NebelwolfisOrbWalkerLoaded then
       else
@@ -898,6 +899,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   function ResetAA()
     if _G.NebelwolfisOrbWalkerLoaded then
       _G.NebelwolfisOrbWalker.orbTable.lastAA = 0
+    elseif _Pewalk then
     elseif _G.MMA_IsLoaded then
       _G.MMA_ResetAutoAttack()
     elseif _G.AutoCarry then
@@ -910,6 +912,8 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   function CanMove()
     if _G.AutoCarry then
       return _G.AutoCarry.Orbwalker:CanMove()
+    elseif _Pewalk then
+      return _Pewalk.CanMove()
     elseif _G.NebelwolfisOrbWalkerLoaded then
       return _G.NebelwolfisOrbWalker:TimeToMove()
     elseif _G.SxOrb then
@@ -922,6 +926,8 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   function CanAttack()
     if _G.AutoCarry then
       return _G.AutoCarry.Orbwalker:CanShoot()
+    elseif _Pewalk then
+      return _Pewalk.CanAttack()
     elseif _G.NebelwolfisOrbWalkerLoaded then
       return _G.NebelwolfisOrbWalker:TimeToAttack()
     elseif _G.SxOrb then
@@ -2420,6 +2426,36 @@ class "Yorick"
     elseif self:CountSoldiers() > 0 and myHero:CanUseSpell(_E) == READY and myHero:CanUseSpell(_Q) == READY and myHero.mana > 129 then
       CastSpell(_E)
       CastSpell(_Q, mousePos.x, mousePos.z)
+    end
+  end
+
+  function Azir:Insec()
+    local enemy = GetClosestEnemy(mousePos)
+    if not enemy or GetDistance(enemy) > 750 then
+      myHero:MoveTo(mousePos.x, mousePos.z)
+      return 
+    end
+    if myHero:CanUseSpell(_R) ~= READY then return end
+    if self:CountSoldiers() > 0 then
+      for _,k in pairs(self:GetSoldiers()) do
+        if not self.soldierToDash then
+          self.soldierToDash = k
+        elseif self.soldierToDash and GetDistanceSqr(k,enemy) < GetDistanceSqr(self.soldierToDash,enemy) then
+          self.soldierToDash = k
+        end
+      end
+    end
+    if not self.soldierToDash and sReady[_W] then
+      Cast(_W, enemy)
+    end
+    if self:CountSoldiers() > 0 and self.soldierToDash then
+      local movePos = myHero + (Vector(enemy) - myHero):normalized() * myHeroSpellData[0].range
+      if movePos then
+        CastSpell(_Q, movePos.x, movePos.z)
+        CastSpell(_E, self.soldierToDash)
+        self:DoR(Vector(myHero), enemy)
+        DelayAction(function() self.soldierToDash = nil end, 2)
+      end
     end
   end
 
@@ -5308,6 +5344,22 @@ class "Yorick"
     end
   end
 
+  function Nidalee:Combo()
+    if sReady[_Q] and self:IsHuman() and Config.Combo.Q and GetDistanceSqr(Target) < myHeroSpellData[0].range^2 then
+      Cast(_Q, Target)
+    end
+    if sReady[_W] and UnitHaveBuff(Target, "nidaleepassivehunted") and self:IsHuman() and Config.Combo.W and GetDistanceSqr(Target) < myHeroSpellData[0].range^2 then
+      Cast(_W, Target)
+    end
+    self:DoRWEQCombo(Target)
+    if not self:IsHuman() and GetDistance(Target) > 425 then
+      Cast(_R)
+    end
+    if not self:IsHuman() and self.spearCooldownUntil < os.clock() then
+      Cast(_R)
+    end
+  end
+
   function Nidalee:DoRWEQCombo(unit)
     if not unit then return end
     if unit and sReady[_R] and UnitHaveBuff(unit, "nidaleepassivehunted") and self:IsHuman() and GetDistance(unit)-self.data.Cougar[1].range*2 < 0 and Config.Combo.R then
@@ -5429,22 +5481,6 @@ class "Yorick"
     end
     dmg = floor(ADDmg*(1-ArmorPercent))+floor(APDmg*(1-MagicArmorPercent))
     return floor(dmg)
-  end
-
-  function Nidalee:Combo()
-    if sReady[_Q] and self:IsHuman() and Config.Combo.Q and GetDistanceSqr(Target) < myHeroSpellData[0].range^2 then
-      Cast(_Q, Target)
-    end
-    if sReady[_W] and UnitHaveBuff(Target, "nidaleepassivehunted") and self:IsHuman() and Config.Combo.W and GetDistanceSqr(Target) < myHeroSpellData[0].range^2 then
-      Cast(_W, Target)
-    end
-    self:DoRWEQCombo(Target)
-    if not self:IsHuman() and GetDistance(Target) > 425 then
-      Cast(_R)
-    end
-    if not self:IsHuman() and self.spearCooldownUntil < os.clock() then
-      Cast(_R)
-    end
   end
 
   function Nidalee:Harass()

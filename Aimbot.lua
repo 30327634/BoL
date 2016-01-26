@@ -305,7 +305,7 @@ _G.Champs = {
 
 if not _G.Champs[myHero.charName] then _G.Champs = nil collectgarbage() return end -- not supported :(
 
-AimbotVersion = 1.84
+AimbotVersion = 2
 
 --Scriptstatus Tracker
 assert(load(Base64Decode("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"), nil, "bt", _ENV))() ScriptStatus("VILKJJKPQMO") 
@@ -366,8 +366,7 @@ function Aimbot:__init()
   AddTickCallback(function() self:Tick() end)
   AddDrawCallback(function() self:Draw() end)
   AddMsgCallback(function(x,y) self:Msg(x,y) end)
-  HookPackets()
-  AddSendPacketCallback(function(p) self:SendPacket(p) end)
+  AddCastSpellCallback(function(p) self:CastSpell(p) end)
 end
 function Aimbot:Vars()
     self.data = _G.Champs[myHero.charName]
@@ -640,25 +639,16 @@ function Aimbot:Draw()
     end
 end
 
-function Aimbot:SendPacket(p)
+function Aimbot:CastSpell(i)
     if self.Config.tog and not self.Config.off and not myHero.dead and self:IsFirstCast() then
-        local head = p.header
-        if head == self.opcs[self.Config.misc.ser][1] then -- old: 0x00E9
-            p.pos=self.opcpos[self.Config.misc.ser]
-            local opc = p:Decode1()
-            if debugMode then print("Opcode "..('0x%02X'):format(opc)) end
-            for i=0,3 do
-                if opc == self.opcs[self.Config.misc.ser][i+2] and not self.toCast[i] and self.toAim[i] and self.Config.skConfig[self.str[i]..myHero.charName] > 0 then -- old: 0x02
-                    self.Target = self:GetCustomTarget(i)
-                    if self.Target ~= nil then
-                        if self:IsChargeable(i) then
-                            self:CastCharged(i)
-                        else
-                            p:Block()
-                            p:skip(1)
-                            self.toCast[i] = true
-                        end
-                    end
+        if not self.toCast[i] and self.toAim[i] and self.Config.skConfig[self.str[i]..myHero.charName] > 0 then -- old: 0x02
+            self.Target = self:GetCustomTarget(i)
+            if self.Target ~= nil then
+                if self:IsChargeable(i) then
+                    self:CastCharged(i)
+                else
+                    BlockSpell()
+                    self.toCast[i] = true
                 end
             end
         end

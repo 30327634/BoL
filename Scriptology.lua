@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.43
+ScriptologyVersion       = 2.431
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -7995,7 +7995,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
         if Config.Windwall and spellData and spellData[unit.charName] then
           local data = spellData[unit.charName]
           for _=0, 3 do
-            if Config.Windwall[unit.charName..str[_]] and data[_] ~= nil and data[_].name and data[_].name ~= "" and data[_].width ~= nil and type(data[_].width) == "number" and (data[_].name:lower():find(spell.name:lower()) or spell.name:lower():find(data[_].name:lower())) then
+            if Config.Windwall[unit.charName..str[_]] and data[_] and data[_].name and data[_].type and data[_].name ~= "" and data[_].width and type(data[_].width) == "number" and (data[_].name:lower():find(spell.name:lower()) or spell.name:lower():find(data[_].name:lower())) then
               if data[_].type == "circular" then
                 if GetDistance(spell.endPos) < data[_].width then
                   local wPos = myHero + (Vector(unit) - myHero):normalized() * myHeroSpellData[1].range 
@@ -8004,7 +8004,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
               elseif data[_].type == "linear" then
                 local makeUpPos = unit + (Vector(spell.endPos)-unit):normalized()*data[_].range
                 local x,_,z = VectorPointProjectionOnLineSegment(makeUpPos,unit,myHero)
-                if z and GetDistance(x) < data[_].width then
+                if z and data[_] and data[_].width and GetDistance(x) < data[_].width then
                   local wPos = myHero + (Vector(unit) - myHero):normalized() * myHeroSpellData[1].range 
                   Cast(_W, wPos)
                 end

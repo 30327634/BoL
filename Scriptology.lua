@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.423
+ScriptologyVersion       = 2.43
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -70,7 +70,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
       if not b then ScriptologyConfig:addSubMenu("Awareness", "Awareness") end
       DelayAction(function() 
         if _G.PrinceViewVersion == nil and _G.DA_LOADED == nil then
-          ScriptologyConfig.Awareness:addParam("info", "Choose your Awareness", SCRIPT_PARAM_LIST, 1, {"Xawareness", "Inbuilt Awareness"})
+          ScriptologyConfig.Awareness:addParam("info", "Choose your Awareness", SCRIPT_PARAM_LIST, 1, {"Inbuilt Awareness"})
           ScriptologyConfig.Awareness:addParam("activate", "Activate the chosen one", SCRIPT_PARAM_ONOFF, false)
           ScriptologyConfig.Awareness:setCallback("activate", function(var) if var then LoadAwareness2() else UnloadAwareness() end end)
           if ScriptologyConfig.Awareness.activate then LoadAwareness2() end
@@ -80,18 +80,8 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
     function LoadAwareness2()
       if not Awarerino then
-        if ScriptologyConfig.Awareness.info == 1 then
-          if FileExist(LIB_PATH.."Xawareness.lua") then
-            require("Xawareness")
-            Xawareness(ScriptologyConfig.Awareness)
-            Msg("'Xawareness' loaded")
-          else
-            CScriptUpdate(0, true, "raw.githubusercontent.com", "/justh1n10/Scripts/master/xawareness/Xawareness.version", "/justh1n10/Scripts/master/xawareness/Xawareness.lua?rand="..random(1,10000), LIB_PATH.."Xawareness.lua", LoadAwareness2, function() end, function() end, LoadSpellData)
-          end
-        else
-          Awarerino = Awareness()
-          Msg("Plugin: 'Awareness' loaded")
-        end
+        Awarerino = Awareness()
+        Msg("Plugin: 'Awareness' loaded")
       end
     end
 
@@ -479,8 +469,8 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
           if cTick > #tickTable then cTick = 1 end
           tickTable[cTick]()
         end
-        CalculateDamageOffsets()
       end)
+      DelayAction(function() AddTickCallback(CalculateDamageOffsets) end, 1)
       if buffToTrackForStacks then
         AddApplyBuffCallback(function(unit, source, buff)
           if unit and buff and unit.team ~= myHero.team and buff.name:lower() == buffToTrackForStacks then
@@ -873,25 +863,27 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   function CalculateDamageOffsets()
     if not Config.Draws.DMG then return end
     for i, enemy in pairs(GetEnemyHeroes()) do
-      local nextOffset = 0
-      local barPos = GetUnitHPBarPos(enemy)
-      local barOffset = GetUnitHPBarOffset(enemy)
-      pos = {x = barPos.x - 67 + barOffset.x * 150, y = barPos.y + barOffset.y * 50 - 4}
-      local totalDmg = 0
-      killDrawTable[enemy.networkID] = {}
-      for _, dmg in pairs(killTable[enemy.networkID]) do
-        if dmg > 0 then
-          local perc1 = dmg / enemy.maxHealth
-          local perc2 = totalDmg / enemy.maxHealth
-          totalDmg = totalDmg + dmg
-          local offs = 1-(enemy.maxHealth - enemy.health) / enemy.maxHealth
-          killDrawTable[enemy.networkID][_] = {
-          offs*105+pos.x-perc2*105, pos.y, -perc1*105, 9, colors[_],
-          str[_-1], 15, offs*105+pos.x-perc1*105-perc2*105, pos.y-20, colors[_]
-          }
-        else
-          killDrawTable[enemy.networkID][_] = {}
-        end
+    	if enemy and enemy.valid then
+	      local nextOffset = 0
+	      local barPos = GetUnitHPBarPos(enemy)
+	      local barOffset = GetUnitHPBarOffset(enemy)
+	      pos = {x = barPos.x - 67 + barOffset.x * 150, y = barPos.y + barOffset.y * 50 - 4}
+	      local totalDmg = 0
+	      killDrawTable[enemy.networkID] = {}
+	      for _, dmg in pairs(killTable[enemy.networkID]) do
+	        if dmg > 0 then
+	          local perc1 = dmg / enemy.maxHealth
+	          local perc2 = totalDmg / enemy.maxHealth
+	          totalDmg = totalDmg + dmg
+	          local offs = 1-(enemy.maxHealth - enemy.health) / enemy.maxHealth
+	          killDrawTable[enemy.networkID][_] = {
+	          offs*105+pos.x-perc2*105, pos.y, -perc1*105, 9, colors[_],
+	          str[_-1], 15, offs*105+pos.x-perc1*105-perc2*105, pos.y-20, colors[_]
+	          }
+	        else
+	          killDrawTable[enemy.networkID][_] = {}
+	        end
+	      end
       end
     end
   end
@@ -1389,64 +1381,65 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
 -- { classes
 
-class "Activator"
-class "Ahri"
-class "Ashe"
-class "Awareness"
-class "Azir"
-class "Blitzcrank"
-class "Brand"
-class "Cassiopeia"
-class "Darius"
-class "Diana"
-class "Draven"
-class "DrMundo"
-class "Ekko"
-class "EmoteSpammer"
-class "EvadeS"
-class "Gangplank"
-class "Gnar"
-class "Hecarim"
-class "Irelia"
-class "Jarvan"
-class "Jax"
-class "Jayce"
-class "Jinx"
-class "Kalista"
-class "Katarina"
-class "Kassadin"
-class "KhaZix"
-class "KogMaw"
-class "LeBlanc"
-class "LeeSin"
-class "Lissandra"
-class "Lux"
-class "Malzahar"
-class "MinionManager"
-class "Nidalee"
-class "Olaf"
-class "Orianna"
-class "Quinn"
-class "RekSai"
-class "Rengar"
-class "Riven"
-class "Rumble"
-class "Ryze"
-class "Shen"
-class "Shyvana"
-class "Syndra"
-class "Talon"
-class "Teemo"
-class "Thresh"
-class "Tristana"
-class "Vayne"
-class "Veigar"
-class "Viktor"
-class "Vladimir"
-class "Volibear"
-class "WardJump"
-class "Yasuo"
-class "Yorick"
+	class "Activator"
+	class "Ahri"
+	class "Ashe"
+	class "Awareness"
+	class "Azir"
+	class "Blitzcrank"
+	class "Brand"
+	class "Cassiopeia"
+	class "Darius"
+	class "Diana"
+	class "Draven"
+	class "DrMundo"
+	class "Ekko"
+	class "EmoteSpammer"
+	class "EvadeS"
+	class "Gangplank"
+	class "Gnar"
+	class "Hecarim"
+	class "Irelia"
+	class "Jarvan"
+	class "Jax"
+	class "Jayce"
+	class "Jinx"
+	class "Kalista"
+	class "Katarina"
+	class "Kassadin"
+	class "KhaZix"
+	class "KogMaw"
+	class "LeBlanc"
+	class "LeeSin"
+	class "Lissandra"
+	class "Lux"
+	class "Malzahar"
+	class "MinionManager"
+	class "Nidalee"
+	class "Olaf"
+	class "Orianna"
+	class "Quinn"
+	class "RekSai"
+	class "Rengar"
+	class "Riven"
+	class "Rumble"
+	class "Ryze"
+	class "Shen"
+	class "Shyvana"
+	class "Syndra"
+	class "Talon"
+	class "Teemo"
+	class "Thresh"
+	class "Tristana"
+	class "Vayne"
+	class "Veigar"
+	class "Viktor"
+	class "Vladimir"
+	class "Volibear"
+	class "WardJump"
+	class "Yasuo"
+	class "Yorick"
+-- }
 
 -- { Activator
 

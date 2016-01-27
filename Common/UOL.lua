@@ -348,16 +348,16 @@ function UOL:ResetAA()
 end
 
 function UOL:GetOrbWalkMode()
-  if (isSAC and _G.AutoCarry.Keys.AutoCarry) or (isNOW and _G.NebelwolfisOrbWalker.Config.k.Combo) or (isSOW and SOWVP.Menu.Mode0) or (isMMA and _G.MMA_IsOrbwalking()) or (isBFW and _G["BigFatOrb_Mode"] == "Combo") or (isSxOrb and _G.SxOrb.isFight) then
+  if (isPEW and _Pewalk.GetActiveMode().Carry) or (isSAC and _G.AutoCarry.Keys.AutoCarry) or (isNOW and _G.NebelwolfisOrbWalker.Config.k.Combo) or (isSOW and SOWVP.Menu.Mode0) or (isMMA and _G.MMA_IsOrbwalking()) or (isBFW and _G["BigFatOrb_Mode"] == "Combo") or (isSxOrb and _G.SxOrb.isFight) then
     return "Combo"
   end
-  if (isSAC and _G.AutoCarry.Keys.MixedMode) or (isNOW and _G.NebelwolfisOrbWalker.Config.k.Harass) or (isSOW and SOWVP.Menu.Mode1) or (isMMA and _G.MMA_IsDualCarrying()) or (isBFW and _G["BigFatOrb_Mode"] == "Harass") or (isSxOrb and _G.SxOrb.isHarass) then
+  if (isPEW and _Pewalk.GetActiveMode().Mixed) or (isSAC and _G.AutoCarry.Keys.MixedMode) or (isNOW and _G.NebelwolfisOrbWalker.Config.k.Harass) or (isSOW and SOWVP.Menu.Mode1) or (isMMA and _G.MMA_IsDualCarrying()) or (isBFW and _G["BigFatOrb_Mode"] == "Harass") or (isSxOrb and _G.SxOrb.isHarass) then
     return "Harass"
   end
-  if (isSAC and _G.AutoCarry.Keys.LaneClear) or (isNOW and _G.NebelwolfisOrbWalker.Config.k.LaneClear) or (isSOW and SOWVP.Menu.Mode2) or (isMMA and _G.MMA_IsLaneClearing()) or (isBFW and _G["BigFatOrb_Mode"] == "LaneClear") or (isSxOrb and _G.SxOrb.isLaneClear) then
+  if (isPEW and _Pewalk.GetActiveMode().LaneClear) or (isSAC and _G.AutoCarry.Keys.LaneClear) or (isNOW and _G.NebelwolfisOrbWalker.Config.k.LaneClear) or (isSOW and SOWVP.Menu.Mode2) or (isMMA and _G.MMA_IsLaneClearing()) or (isBFW and _G["BigFatOrb_Mode"] == "LaneClear") or (isSxOrb and _G.SxOrb.isLaneClear) then
     return "LaneClear"
   end
-  if (isSAC and _G.AutoCarry.Keys.LastHit) or (isNOW and _G.NebelwolfisOrbWalker.Config.k.LastHit) or (isSOW and SOWVP.Menu.Mode3) or (isMMA and _G.MMA_IsLastHitting()) or (isBFW and _G["BigFatOrb_Mode"] == "LastHit") or (isSxOrb and _G.SxOrb.isLastHit) then
+  if (isPEW and _Pewalk.GetActiveMode().Farm) or (isSAC and _G.AutoCarry.Keys.LastHit) or (isNOW and _G.NebelwolfisOrbWalker.Config.k.LastHit) or (isSOW and SOWVP.Menu.Mode3) or (isMMA and _G.MMA_IsLastHitting()) or (isBFW and _G["BigFatOrb_Mode"] == "LastHit") or (isSxOrb and _G.SxOrb.isLastHit) then
     return "LastHit"
   end
   return ""

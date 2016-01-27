@@ -18,7 +18,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 --Scriptstatus tracker (usercounter)
 
 UOLautoupdate = true
-UOLversion = 1.02
+UOLversion = 1.03
 
 function UOL:__init()
   if not _G.UOLloaded then
@@ -142,6 +142,10 @@ function UOL:LoadOrb(i)
     _G["BigFatOrb_DisableMove"] = false
     isBFW = true
   end
+end
+
+function UOL:GetActiveOrb()
+    return isPEW and "Pewalk" or isSAC and "SAC" or isMMA and "MMA" or isNOW and "NOW" or isSxOrb and "SxOrb" or isSOW and "SOW" or isBFW and "BFW" or ""
 end
 
 function UOL:UnloadOrb()

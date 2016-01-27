@@ -214,7 +214,7 @@ end
 
 function UOL:ForceTarget(thing)
   if isSAC then
-    _G.AutoCarry.MyHero:AttacksEnabled(thing)
+    _G.AutoCarry.Orbwalker:OverrideOrbwalkTarget(pos)
   elseif isNOW then
     _G.NebelwolfisOrbWalker:SetTarget(thing)
   elseif isSxOrb then

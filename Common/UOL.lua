@@ -18,7 +18,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 --Scriptstatus tracker (usercounter)
 
 UOLautoupdate = true
-UOLversion = 1.01
+UOLversion = 1.02
 
 function UOL:__init()
   if not _G.UOLloaded then
@@ -76,6 +76,9 @@ function UOL:AddToMenu(scI)
     if _G.Reborn_Loaded or _G.AutoCarry then
       isSAC = true
       scI:addParam("d", "SAC Detected", SCRIPT_PARAM_INFO, "")
+    elseif _Pewalk then
+      isPEW = true
+      scI:addParam("d", "Pewalk Detected", SCRIPT_PARAM_INFO, "")
     elseif _G.MMA_Loaded or _G.MMA_Version then
       isMMA = true
       scI:addParam("d", "MMA Detected", SCRIPT_PARAM_INFO, "")
@@ -152,6 +155,9 @@ function UOL:SetOrb(bool)
     _G.AutoCarry.MyHero:AttacksEnabled(bool)
   elseif isNOW then
     _G.NebelwolfisOrbWalker:SetOrb(bool)
+  elseif isPEW then
+    _Pewalk.AllowAttack(bool)
+    _Pewalk.AllowMove(bool)
   elseif isSxOrb then
     if bool then
       SxOrb:EnableMove()
@@ -177,6 +183,8 @@ function UOL:SetMovement(bool)
     _G.AutoCarry.MyHero:MovementEnabled(bool)
   elseif isNOW then
     _G.NebelwolfisOrbWalker:SetMove(bool)
+  elseif isPEW then
+    _Pewalk.AllowMove(bool)
   elseif isSxOrb then
     if bool then
       SxOrb:EnableMove()
@@ -197,6 +205,8 @@ function UOL:SetAttacks(bool)
     _G.AutoCarry.MyHero:AttacksEnabled(bool)
   elseif isNOW then
     _G.NebelwolfisOrbWalker:SetAA(bool)
+  elseif isPEW then
+    _Pewalk.AllowAttack(bool)
   elseif isSxOrb then
     if bool then
       SxOrb:EnableAttacks()
@@ -217,6 +227,8 @@ function UOL:ForceTarget(thing)
     _G.AutoCarry.Orbwalker:OverrideOrbwalkTarget(pos)
   elseif isNOW then
     _G.NebelwolfisOrbWalker:SetTarget(thing)
+  elseif isPEW then
+    _Pewalk.ForceTarget(thing)
   elseif isSxOrb then
     SxOrb:EnableAttacks()
   elseif isSOW then
@@ -233,6 +245,8 @@ function UOL:ForcePosition(pos)
     _G.AutoCarry.Orbwalker:OverrideOrbwalkLocation(pos)
   elseif isNOW then
     _G.NebelwolfisOrbWalker:ForcePos(pos)
+  elseif isPEW then
+    _Pewalk.ForcePoint(pos)
   elseif isSxOrb then
     SxOrb:ForcePoint(pos and pos.x, pos and pos.z)
   elseif isSOW then
@@ -249,6 +263,8 @@ function UOL:GetTarget()
     return _G.AutoCarry.Crosshair.Attack_Crosshair.target
   elseif isNOW then
     return _G.NebelwolfisOrbWalker:GetTarget()
+  elseif isPEW then
+    return _Pewalk.GetTarget()
   elseif isSxOrb then
     return SxOrb:EnableAttacks()
   elseif isSOW then
@@ -262,9 +278,11 @@ end
 
 function UOL:CanOrb(target)
   if isSAC then
-    return _G.AutoCarry.MyHero:AttacksEnabled(bool)
+    return _G.AutoCarry.MyHero:CanOrbwalkTarget(target)
   elseif isNOW then
     return _G.NebelwolfisOrbWalker:CanOrbTarget(target)
+  elseif isPEW then
+    return _Pewalk.ValidTarget(target)
   elseif isSxOrb then
     return SxOrb:EnableAttacks()
   elseif isSOW then
@@ -281,6 +299,8 @@ function UOL:CanMove()
     return _G.AutoCarry.Orbwalker:CanMove()
   elseif isNOW then
     return _G.NebelwolfisOrbWalker:TimeToMove()
+  elseif isPEW then
+    return _Pewalk.CanMove()
   elseif isSxOrb then
     return SxOrb:CanMove()
   elseif isSOW then
@@ -297,6 +317,8 @@ function UOL:CanAttack()
     return _G.AutoCarry.Orbwalker:CanAttack()
   elseif isNOW then
     return _G.NebelwolfisOrbWalker:TimeToAttack()
+  elseif isPEW then
+    return _Pewalk.CanAttack()
   elseif isSxOrb then
     return SxOrb:CanAttack()
   elseif isSOW then
@@ -313,6 +335,7 @@ function UOL:ResetAA()
     _G.AutoCarry.Orbwalker:ResetAttackTimer()
   elseif isNOW then
     _G.NebelwolfisOrbWalker:ResetAA()
+  elseif isPEW then
   elseif isSxOrb then
     _G.SxOrb:ResetAA()
   elseif isSOW then

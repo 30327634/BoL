@@ -18,7 +18,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 --Scriptstatus tracker (usercounter)
 
 UOLautoupdate = true
-UOLversion = 1.03
+UOLversion = 1.04
 
 function UOL:__init()
   if not _G.UOLloaded then
@@ -74,7 +74,14 @@ end
 function UOL:AddToMenu(scI)
   DelayAction(function()
     if _G.Reborn_Loaded or _G.AutoCarry then
-      isSAC = true
+      local function IsSACLoadedNow()
+        if _G.AutoCarry then
+          isSAC = true
+        else
+          DelayAction(IsSACLoadedNow, 1)
+        end
+      end
+      IsSACLoadedNow()
       scI:addParam("d", "SAC Detected", SCRIPT_PARAM_INFO, "")
     elseif _Pewalk then
       isPEW = true
@@ -228,7 +235,7 @@ end
 
 function UOL:ForceTarget(thing)
   if isSAC then
-    _G.AutoCarry.Orbwalker:OverrideOrbwalkTarget(pos)
+    _G.AutoCarry.Crosshair:ForceTarget(thing)
   elseif isNOW then
     _G.NebelwolfisOrbWalker:SetTarget(thing)
   elseif isPEW then

@@ -18,7 +18,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 --Scriptstatus tracker (usercounter)
 
 UOLautoupdate = true
-UOLversion = 1.04
+UOLversion = 1.05
 
 function UOL:__init()
   if not _G.UOLloaded then
@@ -271,7 +271,7 @@ end
 
 function UOL:GetTarget()
   if isSAC then
-    return _G.AutoCarry.Crosshair.Attack_Crosshair.target
+    return _G.AutoCarry.SkillsCrosshair.target
   elseif isNOW then
     return _G.NebelwolfisOrbWalker:GetTarget()
   elseif isPEW then

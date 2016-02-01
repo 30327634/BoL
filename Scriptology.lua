@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.432
+ScriptologyVersion       = 2.433
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -1859,14 +1859,18 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
   function Ahri:Combo()
     if not Target then return end
-    if sReady[_Q] and Config.Combo.Q and (not Config.Combo.EQ or UnitHaveBuff(Target, "ahriseduce")) and GetDistance(Target) < myHeroSpellData[0].range then
+    if sReady[_Q] and Config.Combo.Q and (not Config.Combo.EQ or not sReady[_E] or UnitHaveBuff(Target, "ahriseduce")) and GetDistance(Target) < myHeroSpellData[0].range then
       Cast(_Q, Target)
     end
     if sReady[_W] and Config.Combo.W and GetDistance(Target) < myHeroSpellData[1].range then
       CastSpell(_W)
     end
     if sReady[_E] and Config.Combo.E and GetDistance(Target) < myHeroSpellData[2].range then
-      Cast(_E, Target)
+      if not Cast(_E, Target) then
+        if sReady[_Q] and Config.Combo.Q and GetDistance(Target) < myHeroSpellData[0].range then
+          Cast(_Q, Target)
+        end
+      end
     end
     if not UnitHaveBuff(Target, "ahriseduce") then
       if Config.Combo.R then

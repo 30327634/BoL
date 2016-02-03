@@ -8008,7 +8008,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
                 end
               elseif data[_].type == "linear" then
                 local makeUpPos = unit + (Vector(spell.endPos)-unit):normalized()*data[_].range
-                local x,_,z = VectorPointProjectionOnLineSegment(makeUpPos,unit,myHero)
+                local x,y,z = VectorPointProjectionOnLineSegment(makeUpPos,unit,myHero)
                 if z and data[_] and data[_].width and GetDistance(x) < data[_].width then
                   local wPos = myHero + (Vector(unit) - myHero):normalized() * myHeroSpellData[1].range 
                   Cast(_W, wPos)

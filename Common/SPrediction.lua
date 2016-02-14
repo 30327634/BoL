@@ -153,7 +153,7 @@ class 'SPrediction' -- {
                 t1, t2 = (t1 and 0 <= t1) and t1 or nil, (t2 and 0 <= t2) and t2 or nil
                 local t = t1 and t2 and math.min(t1,t2) or t1 or t2
                 if t then
-                    pos = t==t1 and Vector(p1.x, enemyPos.y, p1.y) or Vector(p2.x, enemyPos.y, p2.y)
+                    pos = t==t1 and Vector(p1.x, target.y, p1.y) or Vector(p2.x, target.y, p2.y)
                 else
                     pos = Vector(target)+Vector(dir):normalized()*(GetDistance(source,target)/speed+delay)*target.ms
                 end

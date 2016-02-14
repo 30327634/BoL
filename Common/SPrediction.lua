@@ -35,7 +35,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 --Scriptstatus Tracker
 
 _G.SPredictionAutoUpdate = true
-_G.SPredictionVersion    = 3
+_G.SPredictionVersion    = 4
 
 class 'SPrediction' -- {
 
@@ -112,12 +112,13 @@ class 'SPrediction' -- {
     end
 
     function SPrediction:GetTargetDirection(target)
-        local wp = self:GetWayPoints(target)
+        --[[local wp = self:GetWayPoints(target)
         if #wp == 1 then
             return Vector(target.x, target.y, target.z)
         elseif #wp >= 2 then
             return Vector(wp[2].x-target.x, wp[2].y-target.y, wp[2].z-target.z)
-        end
+        end]]
+        return target.hasMovePath and Vector(target.path:Path(target.path.curPath)) or Vector(target)
     end
 
     function SPrediction:GetWayPoints(target) -- ty vpred
@@ -140,15 +141,25 @@ class 'SPrediction' -- {
         return dx*dx + dz*dz
     end
 
-    function SPrediction:PredictPos(target, delay, source)
-        speed = speed or target.ms
+    function SPrediction:PredictPos(target, delay, source, speed)
         delay = delay or 0.125
         source = source or myHero
         local dir = self:GetTargetDirection(target)
         local pos = nil
         local HitBox = target.boundingRadius
         if dir and target.isMoving then
-            pos = Vector(target)+Vector(dir.x, dir.y, dir.z):normalized()*delay*target.ms
+            if speed then
+                local t1, p1, t2, p2 =  VectorMovementCollision(target, target+dir*(GetDistance(source,target)/speed+delay)*target.ms, target.ms, myHero, speed, delay)
+                t1, t2 = (t1 and 0 <= t1) and t1 or nil, (t2 and 0 <= t2) and t2 or nil
+                local t = t1 and t2 and math.min(t1,t2) or t1 or t2
+                if t then
+                    pos = t==t1 and Vector(p1.x, enemyPos.y, p1.y) or Vector(p2.x, enemyPos.y, p2.y)
+                else
+                    pos = Vector(target)+Vector(dir):normalized()*(GetDistance(source,target)/speed+delay)*target.ms
+                end
+            else
+                pos = Vector(target)+Vector(dir):normalized()*delay*target.ms
+            end
         elseif not target.isMoving then
             pos = Vector(target)
         end
@@ -166,11 +177,11 @@ class 'SPrediction' -- {
         source = source or myHero
         collision = type(collision) == 'number' and collision or collision and 0 or math.huge
         if target.type ~= "AIHeroClient" then
-            local Position, HitBox = self:PredictPos(target, GetDistance(source,target)/speed+delay, source)
+            local Position, HitBox = self:PredictPos(target, delay, source, speed)
             return (target.isMoving and Position) and Position or Vector(target), 2, Position
         end
         local hitChance = 0
-        local Position, HitBox = self:PredictPos(target, GetDistance(source,target)/speed+delay, source)
+        local Position, HitBox = self:PredictPos(target, delay, source, speed)
         local Position = Position+(Vector(target)-Position):normalized()*(0.25*width)
         local baitLevel = self:GetBaitLevel(target)
         local rangeOffset = range+width/2-(self:UnitFacingUnit(target, source) and HitBox or 0)

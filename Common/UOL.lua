@@ -18,7 +18,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 --Scriptstatus tracker (usercounter)
 
 UOLautoupdate = true
-UOLversion = 1.06
+UOLversion = 1.07
 
 function UOL:__init()
   if not _G.UOLloaded then
@@ -307,7 +307,7 @@ end
 
 function UOL:CanMove()
   if isSAC then
-    return _G.AutoCarry.Orbwalker:CanMove()
+    return _G.AutoCarry.MyHero:HeroCanMove()
   elseif isNOW then
     return _G.NebelwolfisOrbWalker:TimeToMove()
   elseif isPEW then
@@ -325,7 +325,7 @@ end
 
 function UOL:CanAttack()
   if isSAC then
-    return _G.AutoCarry.Orbwalker:CanAttack()
+    return _G.AutoCarry.MyHero:HeroCanAttack()
   elseif isNOW then
     return _G.NebelwolfisOrbWalker:TimeToAttack()
   elseif isPEW then

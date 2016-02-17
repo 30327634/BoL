@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.433
+ScriptologyVersion       = 2.434
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -3649,18 +3649,18 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Ekko:Harass()
-    if Config.Combo.Q and sReady[_Q] and GetDistanceSqr(Target) < (myHeroSpellData[0].range)^2 then
+    if Config.Harass.Q and sReady[_Q] and GetDistanceSqr(Target) < (myHeroSpellData[0].range)^2 then
       Cast(_Q, Target)
     end
     local slot = GetLichSlot()
     if slot then
-      if myHero:GetSpellData(slot).currentCd == 0 and Config.Combo.E and GetDistanceSqr(Target) < (myHeroSpellData[2].range+(myHero.range+myHero.boundingRadius)*2)^2 then
+      if myHero:GetSpellData(slot).currentCd == 0 and Config.Harass.E and GetDistanceSqr(Target) < (myHeroSpellData[2].range+(myHero.range+myHero.boundingRadius)*2)^2 then
         CastSpell(_E, Target.x, Target.z)
-      elseif myHero:GetSpellData(slot).currentCd > 0 and Config.Combo.E and GetDistanceSqr(Target) < (myHeroSpellData[2].range+(myHero.range+myHero.boundingRadius)*2)^2 and GetDistance(Target) > myHero.range+myHero.boundingRadius*2 then
+      elseif myHero:GetSpellData(slot).currentCd > 0 and Config.Harass.E and GetDistanceSqr(Target) < (myHeroSpellData[2].range+(myHero.range+myHero.boundingRadius)*2)^2 and GetDistance(Target) > myHero.range+myHero.boundingRadius*2 then
         CastSpell(_E, Target.x, Target.z)
       end
     else
-      if Config.Combo.E and GetDistanceSqr(Target) < (myHeroSpellData[2].range+(myHero.range+myHero.boundingRadius)*2)^2 then
+      if Config.Harass.E and GetDistanceSqr(Target) < (myHeroSpellData[2].range+(myHero.range+myHero.boundingRadius)*2)^2 then
         CastSpell(_E, Target.x, Target.z)
       end
     end
@@ -6735,20 +6735,20 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
   function Ryze:ApplyBuff(unit, buff) 
     if unit == nil or not unit.isMe or buff == nil then return end 
-    if buff.name == "ryzepassivestack" then self.passiveTracker = 1 end 
-    if buff.name == "ryzepassivecharged" then self.passiveTracker = 5 end 
+    if buff.name:lower() == "ryzepassivestack" then self.passiveTracker = 1 end 
+    if buff.name:lower() == "ryzepassivecharged" then self.passiveTracker = 5 end 
   end 
 
   function Ryze:UpdateBuff(unit, buff, stacks) 
     if unit == nil or not unit.isMe or buff == nil then return end 
-    if buff.name == "ryzepassivestack" then self.passiveTracker = stacks end 
-    if buff.name == "ryzepassivecharged" then self.passiveTracker = 5 end 
+    if buff.name:lower() == "ryzepassivestack" then self.passiveTracker = stacks end 
+    if buff.name:lower() == "ryzepassivecharged" then self.passiveTracker = 5 end 
   end 
 
   function Ryze:RemoveBuff(unit, buff) 
     if unit == nil or not unit.isMe or buff == nil then return end 
-    if buff.name == "ryzepassivestack" then self.passiveTracker = 0 end 
-    if buff.name == "ryzepassivecharged" then self.passiveTracker = 0 end 
+    if buff.name:lower() == "ryzepassivestack" then self.passiveTracker = 0 end 
+    if buff.name:lower() == "ryzepassivecharged" then self.passiveTracker = 0 end 
   end
 
   function Ryze:Combo()
@@ -8008,7 +8008,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
                 end
               elseif data[_].type == "linear" then
                 local makeUpPos = unit + (Vector(spell.endPos)-unit):normalized()*data[_].range
-                local x,y,z = VectorPointProjectionOnLineSegment(makeUpPos,unit,myHero)
+                local x,_,z = VectorPointProjectionOnLineSegment(makeUpPos,unit,myHero)
                 if z and data[_] and data[_].width and GetDistance(x) < data[_].width then
                   local wPos = myHero + (Vector(unit) - myHero):normalized() * myHeroSpellData[1].range 
                   Cast(_W, wPos)

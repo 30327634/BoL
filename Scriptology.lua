@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.451
+ScriptologyVersion       = 2.45
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -1429,7 +1429,8 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 	class "Jayce"
 	class "Jinx"
 	class "Kalista"
-	class "Katarina"
+  class "Karthus"
+  class "Katarina"
 	class "Kassadin"
 	class "KhaZix"
 	class "KogMaw"
@@ -3981,6 +3982,34 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
         end
       end
     end
+  end
+
+-- }
+
+-- { Karthus
+
+  function Karthus:__init()
+  end
+
+  function Karthus:Load()
+    self:Menu()
+  end
+
+  function Karthus:Menu()
+    Config.Combo:addParam("Q", "Use Q", SCRIPT_PARAM_ONOFF, true)
+    Config.Harass:addParam("Q", "Use Q", SCRIPT_PARAM_ONOFF, true)
+    Config.kConfig:addDynamicParam("Combo", "Combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+    Config.kConfig:addDynamicParam("Harass", "Harass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+    Config.kConfig:addDynamicParam("LastHit", "Last hit", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
+    Config.kConfig:addDynamicParam("LaneClear", "Lane Clear", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
+  end
+
+  function Karthus:Combo()
+    Cast(_Q, Target)
+  end
+
+  function Karthus:Harass()
+    Cast(_Q, Target)
   end
 
 -- }

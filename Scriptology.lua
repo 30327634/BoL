@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.434
+ScriptologyVersion       = 2.44
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -219,6 +219,11 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
         require "nPrediction"
         table.insert(predictionStringTable, "nPrediction")
       end
+      if FileExist(LIB_PATH.."FHPrediction.lua") then
+        require "FHPrediction"
+        table.insert(predictionStringTable, "FHPrediction")
+      end
+      if FHPrediction then table.insert(predictionStringTable, "FHPrediction") end
       table.sort(predictionStringTable)
       table.sort(Prediction)
       str = {[-3] = "P", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R", [4] = "I", [5] = "S"}
@@ -263,6 +268,22 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
           end, spell.range, spell.speed, spell.delay, spell.width, myHero)
         end
       end
+      local SetupFHPredSpell = function(k)
+        spell = myHeroSpellData[k]
+        if not FHPSpells then FHPSpells = {} end
+        local fhType = 0
+        spell.radius = spell.width / 2
+        if spell.type == "linear" then
+          fhType = (not spell.speed or spell.speed == math.huge) and SkillShotType.SkillshotLine or SkillShotType.SkillshotMissileLine
+        elseif spell.type == "circular" then
+          fhType = SkillShotType.SkillshotCircle
+        elseif spell.type == "cone" then
+          fhType = SkillShotType.SkillshotCone
+        end
+        local spell = table.copy(spell, true)
+        spell.type = fhType
+        FHPSpells[k] = spell
+      end
       local SetupDPredSpell = function(k)
         local spell = myHeroSpellData[k]
         local col = spell.collision and ((myHero.charName=="Lux" or myHero.charName=="Veigar") and 1 or 0) or huge
@@ -280,7 +301,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
         end
       end
       DelayAction(function()
-        for m, mode in pairs({Harass = {"Harass", 1.5}, LastHit = {"LastHit", 1}, Combo = {"Combo", 1.55}, LaneClear = {"LaneClear", 1}}) do
+        for m, mode in pairs({Harass = {"Harass", 1.5}, LastHit = {"LastHit", 1}, Combo = {"Combo", 1.5}, LaneClear = {"LaneClear", 1}}) do
           ScriptologyConfig.Prediction:addSubMenu(mode[1].." Settings", mode[1])
           for _=-2, 3 do
             if myHeroSpellData and myHeroSpellData[_] and myHeroSpellData[_].type and (Config[mode[1]][str[_]] ~= nil or myHero.charName == "Yasuo") then
@@ -299,6 +320,9 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
             end
             if _G.nPrediction ~= nil then
               SetupNPredSpell(_)
+            end
+            if FHPrediction ~= nil then
+              SetupFHPredSpell(_)
             end
           end
         end
@@ -1104,20 +1128,24 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     elseif activePrediction == "nPrediction" then
       local x, y = NPSpells[spell]:Predict(to, from)
       if x and y >= nPrediction.State.WILL_HIT then
-        return x, y, Vector(Target)
+        return x, y, Vector(to)
       else
-        return Vector(Target), -0.1, Vector(Target)
+        return Vector(to), -0.1, Vector(to)
       end
     elseif activePrediction == "HPrediction" then
       local col = myHeroSpellData[spell].collision and ((from.charName=="Lux" or from.charName=="Veigar") and 1 or 0) or huge
       local x, y, z = _G.HP:GetPredict(HPSpells[spell], to, from, col)
       return x, y*3, z
+    elseif activePrediction == "FHPrediction" then
+      local col = myHeroSpellData[spell].collision and ((from.charName=="Lux" or from.charName=="Veigar") and 1 or 0) or huge
+      local x, y, z = _G.FHPrediction.GetPrediction(FHPSpells[spell], to, from)
+      return x, z and (not z.col or z.collision.amount < col) and y*1.5 or 0, Vector(to)
     elseif activePrediction == "DivinePred" then
       local State, Position, perc = _G.DP:predict(str[spell], to, Vector(from))
       if perc and Position then
-        return Position, perc/33, (Vector(Target)-Position):normalized()
+        return Position, perc/33, (Vector(to)-Position):normalized()
       else
-        return Vector(Target), -0.1, Vector(Target)
+        return Vector(to), -0.1, Vector(to)
       end
     end
   end

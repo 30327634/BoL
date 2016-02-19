@@ -38,7 +38,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 
 function UPL:__init()
   if not _G.UPLloaded then
-    _G.UPLversion = 5
+    _G.UPLversion = 6
     _G.UPLautoupdate = true
     _G.UPLloaded = false
     self.ActiveP = 1
@@ -92,8 +92,7 @@ function UPL:__init()
       table.insert(self.predTable, "DivinePrediction")
     end
 
-    if FileExist(LIB_PATH.."FHPrediction.lua") then
-      require "FHPrediction"
+    if FHPrediction then
       table.insert(self.predTable, "FHPrediction")
     end
 
@@ -203,7 +202,7 @@ function UPL:AddSpell(spell, array)
     self.spellData[spell] = {speed = array.speed, delay = array.delay, range = array.range, width = array.width, collision = array.collision, aoe = array.aoe, type = array.type, angle = array.angle, accel = array.accel}
     if self.HP ~= nil then self:SetupHPredSpell(spell) end
     if self.DP ~= nil then self:SetupDPredSpell(spell) end
-    if FHPrediction ~= nil then self.spellData[spell].radius = array.width / 2 end
+    if FHPrediction ~= nil then self.SetupFHPredSpell(_) end
     if self.addToMenu2 then
       str = {[-3] = "P", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R"}
       DelayAction(function() self.Config:addParam(str[spell], str[spell].." Prediction", SCRIPT_PARAM_LIST, self.ActiveP, self.predTable) end, 1)
@@ -216,17 +215,9 @@ function UPL:GetSpellData(spell)
 end
 
 function UPL:FHPredict(Target, spell, source)
-  local fhType = 0
-  if spell.type == "linear" then
-    fhType = (not spell.speed or spell.speed == math.huge) and SkillShotType.SkillshotLine or SkillShotType.SkillshotMissileLine
-  elseif spell.type == "circular" then
-    fhType = SkillShotType.SkillshotCircle
-  elseif spell.type == "cone" then
-    fhType = SkillShotType.SkillshotCone
-  end
-  local spell = table.copy(spell, true)
-  spell.type = fhType
-  return FHPrediction.GetPrediction(spell, Target, source)
+  local col = spell.collision and source.charName and ((source.charName=="Lux" or source.charName=="Veigar") and 1 or 0) or huge
+  local x, y, z = _G.FHPrediction.GetPrediction(self.FHPSpells[spell], Target, source)
+  return x, z and (not z.col or z.collision.amount < col) and y*1.5 or 0, Vector(Target)
 end
 
 function UPL:HPredict(Target, spell, source)
@@ -257,6 +248,24 @@ function UPL:SetupHPredSpell(spell)
   else --Cone!
     self.HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay})
   end
+end
+
+function UPL:SetupFHPredSpell(spell)
+  k = spell
+  spell = self.spellData[k]
+  if not self.FHPSpells then self.FHPSpells = {} end
+  local fhType = 0
+  spell.radius = spell.width / 2
+  if spell.type == "linear" then
+    fhType = (not spell.speed or spell.speed == math.huge) and SkillShotType.SkillshotLine or SkillShotType.SkillshotMissileLine
+  elseif spell.type == "circular" then
+    fhType = SkillShotType.SkillshotCircle
+  elseif spell.type == "cone" then
+    fhType = SkillShotType.SkillshotCone
+  end
+  local spell = table.copy(spell, true)
+  spell.type = fhType
+  self.FHPSpells[k] = spell
 end
 
 function UPL:SetupDPredSpell(spell)

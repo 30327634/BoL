@@ -1135,7 +1135,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     elseif activePrediction == "FHPrediction" then
       local col = myHeroSpellData[spell].collision and ((from.charName=="Lux" or from.charName=="Veigar") and 1 or 0) or huge
       local x, y, z = _G.FHPrediction.GetPrediction(FHPSpells[spell], to, from)
-      return x, z and (not z.col or z.collision.amount < col) and y*1.5 or 0, Vector(to)
+      return x, z and (not z.col or z.collision.amount < col) and y*2 or 0, Vector(to)
     elseif activePrediction == "DivinePred" then
       local State, Position, perc = _G.DP:predict(str[spell], to, Vector(from))
       if perc and Position then
@@ -2655,7 +2655,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
             elseif predictionStringTable[activeMode.predQ] == "SPrediction" or predictionStringTable[activeMode.predQ] == "VPrediction" then
               HitChance = HitChance < 0 and 0 or HitChance / 3
             elseif predictionStringTable[activeMode.predQ] == "FHPrediction" then
-              HitChance = HitChance == 0 and 0 or HitChance == 1.5 and 0.75 or 1
+              HitChance = HitChance == 0 and 0 or HitChance == 2 and 0.75 or 1
             end
             DrawText3D("Current HitChance: "..floor(HitChance*100).."%", enemy.x, enemy.y, enemy.z, 25, ARGB(255, 255, 255, 255), true)
           end

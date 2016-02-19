@@ -202,7 +202,7 @@ function UPL:AddSpell(spell, array)
     self.spellData[spell] = {speed = array.speed, delay = array.delay, range = array.range, width = array.width, collision = array.collision, aoe = array.aoe, type = array.type, angle = array.angle, accel = array.accel}
     if self.HP ~= nil then self:SetupHPredSpell(spell) end
     if self.DP ~= nil then self:SetupDPredSpell(spell) end
-    if FHPrediction ~= nil then self.SetupFHPredSpell(_) end
+    if FHPrediction ~= nil then self:SetupFHPredSpell(spell) end
     if self.addToMenu2 then
       str = {[-3] = "P", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R"}
       DelayAction(function() self.Config:addParam(str[spell], str[spell].." Prediction", SCRIPT_PARAM_LIST, self.ActiveP, self.predTable) end, 1)
@@ -215,7 +215,8 @@ function UPL:GetSpellData(spell)
 end
 
 function UPL:FHPredict(Target, spell, source)
-  local col = spell.collision and source.charName and ((source.charName=="Lux" or source.charName=="Veigar") and 1 or 0) or huge
+  print(spell)
+  local col = self.FHPSpells[spell].collision and source.charName and ((source.charName=="Lux" or source.charName=="Veigar") and 1 or 0) or huge
   local x, y, z = _G.FHPrediction.GetPrediction(self.FHPSpells[spell], Target, source)
   return x, z and (not z.col or z.collision.amount < col) and y*1.5 or 0, Vector(Target)
 end

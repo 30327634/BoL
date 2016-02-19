@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.44
+ScriptologyVersion       = 2.45
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -218,10 +218,6 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
       if FileExist(LIB_PATH.."nPrediction.lua") then
         require "nPrediction"
         table.insert(predictionStringTable, "nPrediction")
-      end
-      if FileExist(LIB_PATH.."FHPrediction.lua") then
-        require "FHPrediction"
-        table.insert(predictionStringTable, "FHPrediction")
       end
       if FHPrediction then table.insert(predictionStringTable, "FHPrediction") end
       table.sort(predictionStringTable)

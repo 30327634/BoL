@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.45
+ScriptologyVersion       = 2.451
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -1135,7 +1135,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     elseif activePrediction == "FHPrediction" then
       local col = myHeroSpellData[spell].collision and ((from.charName=="Lux" or from.charName=="Veigar") and 1 or 0) or huge
       local x, y, z = _G.FHPrediction.GetPrediction(FHPSpells[spell], to, from)
-      return x, z and (not z.col or z.collision.amount < col) and y*2 or 0, Vector(to)
+      return x, z and (not z.collision or z.collision.amount < col) and y*2 or 0, Vector(to)
     elseif activePrediction == "DivinePred" then
       local State, Position, perc = _G.DP:predict(str[spell], to, Vector(from))
       if perc and Position then

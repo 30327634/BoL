@@ -215,7 +215,6 @@ function UPL:GetSpellData(spell)
 end
 
 function UPL:FHPredict(Target, spell, source)
-  print(spell)
   local col = self.FHPSpells[spell].collision and source.charName and ((source.charName=="Lux" or source.charName=="Veigar") and 1 or 0) or huge
   local x, y, z = _G.FHPrediction.GetPrediction(self.FHPSpells[spell], Target, source)
   return x, z and (not z.col or z.collision.amount < col) and y*1.5 or 0, Vector(Target)

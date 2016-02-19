@@ -38,7 +38,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 
 function UPL:__init()
   if not _G.UPLloaded then
-    _G.UPLversion = 4
+    _G.UPLversion = 5
     _G.UPLautoupdate = true
     _G.UPLloaded = false
     self.ActiveP = 1
@@ -90,6 +90,11 @@ function UPL:__init()
       require "DivinePred"
       self.DP = DivinePred()
       table.insert(self.predTable, "DivinePrediction")
+    end
+
+    if FileExist(LIB_PATH.."FHPrediction.lua") then
+      require "FHPrediction"
+      table.insert(self.predTable, "FHPrediction")
     end
 
     if FileExist(LIB_PATH .. "HPrediction.lua") then
@@ -173,6 +178,8 @@ function UPL:Predict(spell, source, Target)
       end
   elseif self:ActivePred(spell) == "HPrediction" then
       return self:HPredict(Target, spell, source)
+  elseif self:ActivePred(spell) == "FHPrediction" then
+      return self:FHPredict(Target, spell, source)
   elseif self:ActivePred(spell) == "SPrediction" then
       return self.SP:Predict(Target, self.spellData[spell].range, self.spellData[spell].speed, self.spellData[spell].delay, self.spellData[spell].width, (myHero.charName == "Lux" or myHero.charName == "Veigar") and 1 or self.spellData[spell].collision, source)
   end
@@ -193,9 +200,10 @@ function UPL:AddSpell(spell, array)
   if not UPLloaded then
     DelayAction(function() self:AddSpell(spell,array) end, 1)
   else
-    self.spellData[spell] = {speed = array.speed, delay = array.delay, range = array.range, width = array.width, collision = array.collision, aoe = array.aoe, type = array.type}
+    self.spellData[spell] = {speed = array.speed, delay = array.delay, range = array.range, width = array.width, collision = array.collision, aoe = array.aoe, type = array.type, angle = array.angle, accel = array.accel}
     if self.HP ~= nil then self:SetupHPredSpell(spell) end
     if self.DP ~= nil then self:SetupDPredSpell(spell) end
+    if FHPrediction ~= nil then self.spellData[spell].radius = array.width / 2 end
     if self.addToMenu2 then
       str = {[-3] = "P", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R"}
       DelayAction(function() self.Config:addParam(str[spell], str[spell].." Prediction", SCRIPT_PARAM_LIST, self.ActiveP, self.predTable) end, 1)
@@ -205,6 +213,20 @@ end
 
 function UPL:GetSpellData(spell)
   return self.spellData[spell]
+end
+
+function UPL:FHPredict(Target, spell, source)
+  local fhType = 0
+  if spell.type == "linear" then
+    fhType = (not spell.speed or spell.speed == math.huge) and SkillShotType.SkillshotLine or SkillShotType.SkillshotMissileLine
+  elseif spell.type == "circular" then
+    fhType = SkillShotType.SkillshotCircle
+  elseif spell.type == "cone" then
+    fhType = SkillShotType.SkillshotCone
+  end
+  local spell = table.copy(spell, true)
+  spell.type = fhType
+  return FHPrediction.GetPrediction(spell, Target, source)
 end
 
 function UPL:HPredict(Target, spell, source)
@@ -242,12 +264,12 @@ function UPL:SetupDPredSpell(spell)
   local Spell = nil
   local spell = self.spellData[spell]
   local col = spell.collision and ((myHero.charName=="Lux" or myHero.charName=="Veigar") and 1 or 0) or math.huge
-  if spell.type == "linear" then
-    Spell = LineSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
-  elseif spell.type == "circular" then
+  if spell.type == "circular" then
     Spell = CircleSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
   elseif spell.type == "cone" then
     Spell = ConeSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
+  else
+    Spell = LineSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
   end
   self.DP:bindSS(str, Spell, 1)
 end

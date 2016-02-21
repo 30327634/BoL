@@ -26,7 +26,7 @@
       CastSpell(_Q, CastPosition.x, CastPosition.y)
     end
   
-  Supports and auto-detects: VPrediction, Prodiction, DivinePrediction, HPrediction, TKPrediction
+  Supports and auto-detects: VPrediction, SPrediction, DPrediction, HPrediction, KPrediction, FHPrediction
 
 ]]--
 
@@ -38,7 +38,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 
 function UPL:__init()
   if not _G.UPLloaded then
-    _G.UPLversion = 6.1
+    _G.UPLversion = 6.2
     _G.UPLautoupdate = true
     _G.UPLloaded = false
     self.ActiveP = 1
@@ -105,6 +105,18 @@ function UPL:__init()
         self.HP = HPrediction()
         _G.HP = self.HP
         table.insert(self.predTable, "HPrediction")
+      end
+    end
+
+    if FileExist(LIB_PATH .. "KPrediction.lua") then
+      if _G.KP then
+        self.KP = _G.KP
+        table.insert(self.predTable, "KPrediction")
+      else
+        require("KPrediction")
+        self.KP = KPrediction()
+        _G.KP = self.KP
+        table.insert(self.predTable, "KPrediction")
       end
     end
 
@@ -175,6 +187,8 @@ function UPL:Predict(spell, source, Target)
       else
         return Vector(Target), 0, Vector(Target)
       end
+  elseif self:ActivePred(spell) == "KPrediction" then
+      return self:KPredict(Target, spell, source)
   elseif self:ActivePred(spell) == "HPrediction" then
       return self:HPredict(Target, spell, source)
   elseif self:ActivePred(spell) == "FHPrediction" then
@@ -202,6 +216,7 @@ function UPL:AddSpell(spell, array)
     self.spellData[spell] = {speed = array.speed, delay = array.delay, range = array.range, width = array.width, collision = array.collision, aoe = array.aoe, type = array.type, angle = array.angle, accel = array.accel}
     if self.HP ~= nil then self:SetupHPredSpell(spell) end
     if self.DP ~= nil then self:SetupDPredSpell(spell) end
+    if self.KP ~= nil then self:SetupKPredSpell(spell) end
     if FHPrediction ~= nil then self:SetupFHPredSpell(spell) end
     if self.addToMenu2 then
       str = {[-3] = "P", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R"}
@@ -218,6 +233,12 @@ function UPL:FHPredict(Target, spell, source)
   local col = self.FHPSpells[spell].collision and source.charName and ((source.charName=="Lux" or source.charName=="Veigar") and 1 or 0) or huge
   local x, y, z = _G.FHPrediction.GetPrediction(self.FHPSpells[spell], Target, source)
   return x, z and (not z.collision or z.collision.amount < col) and y*1.5 or 0, Vector(Target)
+end
+
+function UPL:KPredict(Target, spell, source)
+  local col = self.spellData[spell].collision and ((myHero.charName=="Lux" or myHero.charName=="Veigar") and 1 or 0) or math.huge
+  local x, y, z1, z2 = self.KP:GetPrediction(self.KPSpells[spell], Target, source, nil, self.spellData[spell].aoe)
+  return x, y, Vector(Target)
 end
 
 function UPL:HPredict(Target, spell, source)
@@ -247,6 +268,39 @@ function UPL:SetupHPredSpell(spell)
       end
   else --Cone!
     self.HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay})
+  end
+end
+
+function UPL:SetupKPredSpell(spell)
+  k = spell
+  spell = self.spellData[k]
+  if not self.KPSpells then self.KPSpells = {} end
+  if spell.type == "linear" then
+      if spell.speed ~= math.huge then 
+        if spell.collision then
+          self.KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay, collisionM = spell.collision, collisionH = spell.collision})
+        else
+          self.KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay})
+        end
+      else
+        self.KPSpells[k] = KPSkillshot({type = "PromptLine", range = spell.range, width = 2*spell.width, delay = spell.delay})
+      end
+  elseif spell.type == "circular" then
+      if spell.speed ~= math.huge then 
+        self.KPSpells[k] = KPSkillshot({type = "DelayCircle", range = spell.range, speed = spell.speed, radius = spell.width, delay = spell.delay})
+      else
+        self.KPSpells[k] = KPSkillshot({type = "PromptCircle", range = spell.range, radius = spell.width, delay = spell.delay})
+      end
+  else --Cone!
+    if spell.angle then
+      if spell.speed ~= math.huge then
+        self.KPSpells[k] = KPSkillshot({type = "DelayArc", range = spell.range, angle = spell.angle, speed = spell.speed, delay = spell.delay})
+      else
+        self.KPSpells[k] = KPSkillshot({type = "PromptArc", range = spell.range, angle = spell.angle, delay = spell.delay})
+      end
+    else -- But we probably don't have angle ...
+      self.KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay})
+    end
   end
 end
 

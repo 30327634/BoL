@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.45
+ScriptologyVersion       = 2.46
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -194,7 +194,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
       ScriptologyConfig:addSubMenu("Prediction", "Prediction")
       Prediction = {}
       predictionStringTable = {}
-      for _, k in pairs({VP = "VPrediction", SP = "SPrediction", HP = "HPrediction"}) do
+      for _, k in pairs({VP = "VPrediction", SP = "SPrediction", HP = "HPrediction", KP = "KPrediction"}) do
         if FileExist(LIB_PATH .. k .. ".lua") then
           if _G[_] then
           Prediction[_] = _G[_]
@@ -244,6 +244,29 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
           end
         else
           HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay})
+        end
+      end
+      local SetupKPredSpell = function(k)
+        spell = myHeroSpellData[k]
+        if not KPSpells then KPSpells = {} end
+        if spell.type == "linear" then
+          if spell.speed ~= huge then 
+            if spell.collision then
+              KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay, collisionM = spell.collision, collisionH = spell.collision})
+            else
+              KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay})
+            end
+          else
+            KPSpells[k] = KPSkillshot({type = "PromptLine", range = spell.range, width = 2*spell.width, delay = spell.delay})
+          end
+        elseif spell.type == "circular" then
+          if spell.speed ~= huge then 
+            KPSpells[k] = KPSkillshot({type = "DelayCircle", range = spell.range, speed = spell.speed, radius = spell.width, delay = spell.delay})
+          else
+            KPSpells[k] = KPSkillshot({type = "PromptCircle", range = spell.range, radius = spell.width, delay = spell.delay})
+          end
+        else
+          KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay})
         end
       end
       local SetupNPredSpell = function(k)
@@ -313,6 +336,9 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
             end
             if _G.HP ~= nil then
               SetupHPredSpell(_)
+            end
+            if _G.KP ~= nil then
+              SetupKPredSpell(_)
             end
             if _G.nPrediction ~= nil then
               SetupNPredSpell(_)
@@ -1132,6 +1158,10 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
       local col = myHeroSpellData[spell].collision and ((from.charName=="Lux" or from.charName=="Veigar") and 1 or 0) or huge
       local x, y, z = _G.HP:GetPredict(HPSpells[spell], to, from, col)
       return x, y*3, z
+    elseif activePrediction == "KPrediction" then
+      local col = myHeroSpellData[spell].collision and ((from.charName=="Lux" or from.charName=="Veigar") and 1 or 0) or huge
+      local x, y, z1, z2 = _G.KP:GetPrediction(KPSpells[spell], to, from, nil, myHeroSpellData[spell].aoe)
+      return x, y, Vector(to)
     elseif activePrediction == "FHPrediction" then
       local col = myHeroSpellData[spell].collision and ((from.charName=="Lux" or from.charName=="Veigar") and 1 or 0) or huge
       local x, y, z = _G.FHPrediction.GetPrediction(FHPSpells[spell], to, from)

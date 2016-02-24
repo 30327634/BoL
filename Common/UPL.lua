@@ -38,7 +38,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 
 function UPL:__init()
   if not _G.UPLloaded then
-    _G.UPLversion = 6.3
+    _G.UPLversion = 6.4
     _G.UPLautoupdate = true
     _G.UPLloaded = false
     self.ActiveP = 1
@@ -219,7 +219,7 @@ function UPL:AddSpell(spell, array)
     if self.KP ~= nil then self:SetupKPredSpell(spell) end
     if FHPrediction ~= nil then self:SetupFHPredSpell(spell) end
     if self.addToMenu2 then
-      str = {[-3] = "P", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R"}
+      str = {[-3] = "P", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R", [4] = "R2"}
       DelayAction(function() self.Config:addParam(str[spell], str[spell].." Prediction", SCRIPT_PARAM_LIST, self.ActiveP, self.predTable) end, 1)
     end
   end
@@ -231,7 +231,7 @@ end
 
 function UPL:FHPredict(Target, spell, source)
   local col = self.FHPSpells[spell].collision and source.charName and ((source.charName=="Lux" or source.charName=="Veigar") and 1 or 0) or huge
-  local x, y, z = _G.FHPrediction.GetPrediction(self.FHPSpells[spell], Target, source)
+  local x, y, z = _G.FHPrediction.GetPrediction(FHPrediction.HasPreset(str[spell]) and str[spell] or self.FHPSpells[spell], Target, source)
   return x, z and (not z.collision or z.collision.amount < col) and y*1.5 or 0, Vector(Target)
 end
 

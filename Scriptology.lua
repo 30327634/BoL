@@ -1,8 +1,8 @@
-ScriptologyVersion       = 2.46
+ScriptologyVersion       = 2.47
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
-ScriptologyFixBugsplats  = false
+ScriptologyFixBugsplats  = true
 ScriptologyLoadEvade     = false
 ScriptologyAutoUpdate    = true
 ScriptologyConfig        = scriptConfig("Scriptology Loader", "Scriptology")
@@ -229,21 +229,21 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
         if spell.type == "linear" then
           if spell.speed ~= huge then 
             if spell.collision then
-              HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay, collisionM = spell.collision, collisionH = spell.collision})
+              HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay, collisionM = spell.collision, collisionH = spell.collision})
             else
-              HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay})
+              HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
             end
           else
-            HPSpells[k] = HPSkillshot({type = "PromptLine", range = spell.range, width = 2*spell.width, delay = spell.delay})
+            HPSpells[k] = HPSkillshot({type = "PromptLine", range = spell.range, width = spell.width, delay = spell.delay})
           end
         elseif spell.type == "circular" then
           if spell.speed ~= huge then 
-            HPSpells[k] = HPSkillshot({type = "DelayCircle", range = spell.range, speed = spell.speed, radius = spell.width, delay = spell.delay})
+            HPSpells[k] = HPSkillshot({type = "DelayCircle", range = spell.range, speed = spell.speed, radius = 0.5*spell.width, delay = spell.delay})
           else
-            HPSpells[k] = HPSkillshot({type = "PromptCircle", range = spell.range, radius = spell.width, delay = spell.delay})
+            HPSpells[k] = HPSkillshot({type = "PromptCircle", range = spell.range, radius = 0.5*spell.width, delay = spell.delay})
           end
         else
-          HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay})
+          HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
         end
       end
       local SetupKPredSpell = function(k)
@@ -252,21 +252,21 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
         if spell.type == "linear" then
           if spell.speed ~= huge then 
             if spell.collision then
-              KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay, collisionM = spell.collision, collisionH = spell.collision})
+              KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay, collisionM = spell.collision, collisionH = spell.collision})
             else
-              KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay})
+              KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
             end
           else
-            KPSpells[k] = KPSkillshot({type = "PromptLine", range = spell.range, width = 2*spell.width, delay = spell.delay})
+            KPSpells[k] = KPSkillshot({type = "PromptLine", range = spell.range, width = spell.width, delay = spell.delay})
           end
         elseif spell.type == "circular" then
           if spell.speed ~= huge then 
-            KPSpells[k] = KPSkillshot({type = "DelayCircle", range = spell.range, speed = spell.speed, radius = spell.width, delay = spell.delay})
+            KPSpells[k] = KPSkillshot({type = "DelayCircle", range = spell.range, speed = spell.speed, radius = 0.5*spell.width, delay = spell.delay})
           else
-            KPSpells[k] = KPSkillshot({type = "PromptCircle", range = spell.range, radius = spell.width, delay = spell.delay})
+            KPSpells[k] = KPSkillshot({type = "PromptCircle", range = spell.range, radius = 0.5*spell.width, delay = spell.delay})
           end
         else
-          KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay})
+          KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
         end
       end
       local SetupNPredSpell = function(k)
@@ -1157,7 +1157,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     elseif activePrediction == "HPrediction" then
       local col = myHeroSpellData[spell].collision and ((from.charName=="Lux" or from.charName=="Veigar") and 1 or 0) or huge
       local x, y, z = _G.HP:GetPredict(HPSpells[spell], to, from, col)
-      return x, y*3, z
+      return x, y*2, z
     elseif activePrediction == "KPrediction" then
       local col = myHeroSpellData[spell].collision and ((from.charName=="Lux" or from.charName=="Veigar") and 1 or 0) or huge
       local x, y, z1, z2 = _G.KP:GetPrediction(KPSpells[spell], to, from, nil, myHeroSpellData[spell].aoe)
@@ -1165,7 +1165,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     elseif activePrediction == "FHPrediction" then
       local col = myHeroSpellData[spell].collision and ((from.charName=="Lux" or from.charName=="Veigar") and 1 or 0) or huge
       local x, y, z = _G.FHPrediction.GetPrediction(FHPSpells[spell], to, from)
-      return x, z and (not z.collision or z.collision.amount < col) and y*2 or 0, Vector(to)
+      return x, z and (not z.collision or z.collision.amount < col) and y*1.5 or 0, Vector(to)
     elseif activePrediction == "DivinePred" then
       local State, Position, perc = _G.DP:predict(str[spell], to, Vector(from))
       if perc and Position then

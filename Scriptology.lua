@@ -2686,7 +2686,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
             elseif predictionStringTable[activeMode.predQ] == "SPrediction" or predictionStringTable[activeMode.predQ] == "VPrediction" then
               HitChance = HitChance < 0 and 0 or HitChance / 3
             elseif predictionStringTable[activeMode.predQ] == "FHPrediction" then
-              HitChance = HitChance == 0 and 0 or HitChance == 2 and 0.75 or 1
+              HitChance = HitChance > 0 and (HitChance / 1.5 - 1) or 0
             end
             DrawText3D("Current HitChance: "..floor(HitChance*100).."%", enemy.x, enemy.y, enemy.z, 25, ARGB(255, 255, 255, 255), true)
           end

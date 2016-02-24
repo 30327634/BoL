@@ -38,7 +38,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 
 function UPL:__init()
   if not _G.UPLloaded then
-    _G.UPLversion = 6.2
+    _G.UPLversion = 6.3
     _G.UPLautoupdate = true
     _G.UPLloaded = false
     self.ActiveP = 1
@@ -253,21 +253,21 @@ function UPL:SetupHPredSpell(spell)
   if spell.type == "linear" then
       if spell.speed ~= math.huge then 
         if spell.collision then
-          self.HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay, collisionM = spell.collision, collisionH = spell.collision})
+          self.HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay, collisionM = spell.collision, collisionH = spell.collision})
         else
-          self.HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay})
+          self.HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
         end
       else
-        self.HPSpells[k] = HPSkillshot({type = "PromptLine", range = spell.range, width = 2*spell.width, delay = spell.delay})
+        self.HPSpells[k] = HPSkillshot({type = "PromptLine", range = spell.range, width = spell.width, delay = spell.delay})
       end
   elseif spell.type == "circular" then
       if spell.speed ~= math.huge then 
-        self.HPSpells[k] = HPSkillshot({type = "DelayCircle", range = spell.range, speed = spell.speed, radius = spell.width, delay = spell.delay})
+        self.HPSpells[k] = HPSkillshot({type = "DelayCircle", range = spell.range, speed = spell.speed, radius = .5*spell.width, delay = spell.delay})
       else
-        self.HPSpells[k] = HPSkillshot({type = "PromptCircle", range = spell.range, radius = spell.width, delay = spell.delay})
+        self.HPSpells[k] = HPSkillshot({type = "PromptCircle", range = spell.range, radius = .5*spell.width, delay = spell.delay})
       end
   else --Cone!
-    self.HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay})
+    self.HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
   end
 end
 
@@ -278,18 +278,18 @@ function UPL:SetupKPredSpell(spell)
   if spell.type == "linear" then
       if spell.speed ~= math.huge then 
         if spell.collision then
-          self.KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay, collisionM = spell.collision, collisionH = spell.collision})
+          self.KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay, collisionM = spell.collision, collisionH = spell.collision})
         else
-          self.KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay})
+          self.KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
         end
       else
-        self.KPSpells[k] = KPSkillshot({type = "PromptLine", range = spell.range, width = 2*spell.width, delay = spell.delay})
+        self.KPSpells[k] = KPSkillshot({type = "PromptLine", range = spell.range, width = spell.width, delay = spell.delay})
       end
   elseif spell.type == "circular" then
       if spell.speed ~= math.huge then 
-        self.KPSpells[k] = KPSkillshot({type = "DelayCircle", range = spell.range, speed = spell.speed, radius = spell.width, delay = spell.delay})
+        self.KPSpells[k] = KPSkillshot({type = "DelayCircle", range = spell.range, speed = spell.speed, radius = .5*spell.width, delay = spell.delay})
       else
-        self.KPSpells[k] = KPSkillshot({type = "PromptCircle", range = spell.range, radius = spell.width, delay = spell.delay})
+        self.KPSpells[k] = KPSkillshot({type = "PromptCircle", range = spell.range, radius = .5*spell.width, delay = spell.delay})
       end
   else --Cone!
     if spell.angle then
@@ -299,7 +299,7 @@ function UPL:SetupKPredSpell(spell)
         self.KPSpells[k] = KPSkillshot({type = "PromptArc", range = spell.range, angle = spell.angle, delay = spell.delay})
       end
     else -- But we probably don't have angle ...
-      self.KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = 2*spell.width, delay = spell.delay})
+      self.KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
     end
   end
 end

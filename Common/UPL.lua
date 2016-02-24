@@ -38,7 +38,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 
 function UPL:__init()
   if not _G.UPLloaded then
-    _G.UPLversion = 6.4
+    _G.UPLversion = 6.5
     _G.UPLautoupdate = true
     _G.UPLloaded = false
     self.ActiveP = 1
@@ -230,8 +230,9 @@ function UPL:GetSpellData(spell)
 end
 
 function UPL:FHPredict(Target, spell, source)
+  local str = ({[-3] = "P", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R", [4] = "R2"})[spell]
   local col = self.FHPSpells[spell].collision and source.charName and ((source.charName=="Lux" or source.charName=="Veigar") and 1 or 0) or huge
-  local x, y, z = _G.FHPrediction.GetPrediction(FHPrediction.HasPreset(str[spell]) and str[spell] or self.FHPSpells[spell], Target, source)
+  local x, y, z = _G.FHPrediction.GetPrediction((str and FHPrediction.HasPreset(str)) and str or self.FHPSpells[spell], Target, source)
   return x, z and (not z.collision or z.collision.amount < col) and y*1.5 or 0, Vector(Target)
 end
 

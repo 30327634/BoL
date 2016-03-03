@@ -38,7 +38,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 
 function UPL:__init()
   if not _G.UPLloaded then
-    _G.UPLversion = 6.6
+    _G.UPLversion = 6.7
     _G.UPLautoupdate = true
     _G.UPLloaded = false
     self.ActiveP = 1
@@ -239,6 +239,7 @@ end
 function UPL:KPredict(Target, spell, source)
   local col = self.spellData[spell].collision and ((myHero.charName=="Lux" or myHero.charName=="Veigar") and 1 or 0) or math.huge
   local x, y, z1, z2 = self.KP:GetPrediction(self.KPSpells[spell], Target, source, nil, self.spellData[spell].aoe)
+  if x then if #self.KP:GetPenetration(self.KPSpells[spell], Target, source, x) > col then return nil, 0, Vector(Target) end end
   return x, y, Vector(Target)
 end
 
@@ -278,11 +279,7 @@ function UPL:SetupKPredSpell(spell)
   if not self.KPSpells then self.KPSpells = {} end
   if spell.type == "linear" then
       if spell.speed ~= math.huge then 
-        if spell.collision then
-          self.KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay, collisionM = spell.collision, collisionH = spell.collision})
-        else
-          self.KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
-        end
+        self.KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
       else
         self.KPSpells[k] = KPSkillshot({type = "PromptLine", range = spell.range, width = spell.width, delay = spell.delay})
       end

@@ -1,12 +1,12 @@
 --[[
-  _    _       _  __ _          _    ____       _                  _ _               _ _ _                          
- | |  | |     (_)/ _(_)        | |  / __ \     | |                | | |             | (_) |                         
+  _    _       _  __ _          _    ____       _                  _ _               _ _ _
+ | |  | |     (_)/ _(_)        | |  / __ \     | |                | | |             | (_) |
  | |  | |_ __  _| |_ _  ___  __| | | |  | |_ __| |____      ____ _| | | _____ _ __  | |_| |__  _ __ __ _ _ __ _   _ 
  | |  | | '_ \| |  _| |/ _ \/ _` | | |  | | '__| '_ \ \ /\ / / _` | | |/ / _ \ '__| | | | '_ \| '__/ _` | '__| | | |
  | |__| | | | | | | | |  __/ (_| | | |__| | |  | |_) \ V  V / (_| | |   <  __/ |    | | | |_) | | | (_| | |  | |_| |
   \____/|_| |_|_|_| |_|\___|\__,_|  \____/|_|  |_.__/ \_/\_/ \__,_|_|_|\_\___|_|    |_|_|_.__/|_|  \__,_|_|   \__, |
                                                                                                                __/ |
-                                                                                                              |___/ 
+                                                                                                              |___/
   By Nebelwolfi
 
 ]]--
@@ -18,7 +18,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 --Scriptstatus tracker (usercounter)
 
 UOLautoupdate = true
-UOLversion = 1.08
+UOLversion = 1.09
 
 function UOL:__init()
   if not _G.UOLloaded then
@@ -281,7 +281,7 @@ function UOL:GetTarget()
   elseif isSOW then
     return SOWVP:GetTarget(true)
   elseif isBFW then
-    return nil
+    return Orbwalk_GetTarget()
   elseif isMMA then
     return _G.MMA_Target()
   end
@@ -299,7 +299,7 @@ function UOL:CanOrb(target)
   elseif isSOW then
     return SOWVP:ValidTarget(target)
   elseif isBFW then
-    return ValidTarget(target)
+    return CanMove() and not IsEvading() and ValidTarget(target)
   elseif isMMA then
     return _G.MMA_StopAttacks(not bool)
   end
@@ -317,7 +317,7 @@ function UOL:CanMove()
   elseif isSOW then
     return SOWVP:CanMove()
   elseif isBFW then
-    return true -- ...
+    return CanMove()
   elseif isMMA then
     return _G.MMA_CanMove
   end
@@ -335,7 +335,7 @@ function UOL:CanAttack()
   elseif isSOW then
     return SOWVP:CanAttack()
   elseif isBFW then
-    return true -- ...
+    return CanAttack()
   elseif isMMA then
     return _G.MMA_CanAttack
   end
@@ -352,7 +352,7 @@ function UOL:ResetAA()
   elseif isSOW then
     SOWVP:resetAA()
   elseif isBFW then
-    -- ...
+    BigFatOrb_ResetAA()
   elseif isMMA then
     _G.MMA_ResetAutoAttack()
   end

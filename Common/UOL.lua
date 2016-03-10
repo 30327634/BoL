@@ -19,7 +19,7 @@ TrackerLoad("Oa2u5AWkbJkT7ecr")
 --Scriptstatus tracker (usercounter)
 
 UOLautoupdate = true
-UOLversion = 1.09
+UOLversion = 1.10
 
 function UOL:__init()
   if not _G.UOLloaded then

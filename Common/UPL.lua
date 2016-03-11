@@ -1,32 +1,32 @@
 --[[
-  _    _       _  __ _          _   _____              _ _      _   _               _      _ _                          
+	_    _       _  __ _          _   _____              _ _      _   _               _      _ _                          
  | |  | |     (_)/ _(_)        | | |  __ \            | (_)    | | (_)             | |    (_) |                         
  | |  | |_ __  _| |_ _  ___  __| | | |__) | __ ___  __| |_  ___| |_ _  ___  _ __   | |     _| |__  _ __ __ _ _ __ _   _ 
  | |  | | '_ \| |  _| |/ _ \/ _` | |  ___/ '__/ _ \/ _` | |/ __| __| |/ _ \| '_ \  | |    | | '_ \| '__/ _` | '__| | | |
  | |__| | | | | | | | |  __/ (_| | | |   | | |  __/ (_| | | (__| |_| | (_) | | | | | |____| | |_) | | | (_| | |  | |_| |
-  \____/|_| |_|_|_| |_|\___|\__,_| |_|   |_|  \___|\__,_|_|\___|\__|_|\___/|_| |_| |______|_|_.__/|_|  \__,_|_|   \__, |
-                                                                                                                   __/ |
-                                                                                                                  |___/ 
-  By Nebelwolfi
+	\____/|_| |_|_|_| |_|\___|\__,_| |_|   |_|  \___|\__,_|_|\___|\__|_|\___/|_| |_| |______|_|_.__/|_|  \__,_|_|   \__, |
+																																																									 __/ |
+																																																									|___/ 
+	By Nebelwolfi
 
 
-  How To Use:
+	How To Use:
 
-    require("UPL")
-    UPL = UPL()
+		require("UPL")
+		UPL = UPL()
 
-    UPL:AddToMenu(Menu)
-    Will add prediction selector to the given scriptConfig
+		UPL:AddToMenu(Menu)
+		Will add prediction selector to the given scriptConfig
 
-    UPL:AddSpell(_Q, { speed = 1800, delay = 0.25, range = 900, width = 70, collision = true, aoe = false, type = "linear" })
-    Will add the spell to all predictions
+		UPL:AddSpell(_Q, { speed = 1800, delay = 0.25, range = 900, width = 70, collision = true, aoe = false, type = "linear" })
+		Will add the spell to all predictions
 
-    CastPosition, HitChance, HeroPosition = UPL:Predict(_Q, myHero, Target)
-    if HitChance >= X then
-      CastSpell(_Q, CastPosition.x, CastPosition.y)
-    end
-  
-  Supports and auto-detects: VPrediction, SPrediction, DPrediction, HPrediction, KPrediction, FHPrediction
+		CastPosition, HitChance, HeroPosition = UPL:Predict(_Q, myHero, Target)
+		if HitChance >= X then
+			CastSpell(_Q, CastPosition.x, CastPosition.y)
+		end
+	
+	Supports and auto-detects: VPrediction, SPrediction, DPrediction, HPrediction, KPrediction, FHPrediction
 
 ]]--
 
@@ -38,378 +38,305 @@ TrackerLoad("dUSfSclJkhEOpI3n")
 --Scriptstatus tracker (usercounter)
 
 function UPL:__init()
-  if not _G.UPLloaded then
-    _G.UPLversion = 6.9
-    _G.UPLautoupdate = true
-    _G.UPLloaded = false
-    self.ActiveP = 1
-    self.LastRequest = 0
-    self.Config = nil
-    self.Config2 = nil
-    self.VP  = nil
-    self.DP  = nil
-    self.HP  = nil
-    self.SP = nil
-    self.HPSpells  = {}
-    self.spellData = {
-      [_Q] = { speed = 0, delay = 0, range = 0, width = 0, collision = true, aoe = false, type = "linear"},
-      [_W] = { speed = 0, delay = 0, range = 0, width = 0, collision = true, aoe = false, type = "linear"},
-      [_E] = { speed = 0, delay = 0, range = 0, width = 0, collision = true, aoe = false, type = "linear"},
-      [_R] = { speed = 0, delay = 0, range = 0, width = 0, collision = true, aoe = false, type = "linear"}}
-    self.predTable = {}
-
-    if FileExist(LIB_PATH .. "SPrediction.lua") then
-      if _G.SP then
-        self.SP = _G.SP
-        table.insert(self.predTable, "SPrediction")
-      else
-        require("SPrediction")
-        self.SP = SPrediction()
-        _G.SP = self.SP
-        table.insert(self.predTable, "SPrediction")
-      end
-    end
-    
-    if FileExist(LIB_PATH .. "VPrediction.lua") then
-      if _G.VP then
-        self.VP = _G.VP
-        table.insert(self.predTable, "VPrediction")
-      else
-        require("VPrediction")
-        self.VP = VPrediction()
-        _G.VP = self.VP
-        table.insert(self.predTable, "VPrediction")
-      end
-    end
-
-    if FileExist(LIB_PATH .. "Prodiction.lua") then
-      --require("Prodiction")
-      --table.insert(self.predTable, "Prodiction")
-    end
-
-    if VIP_USER and FileExist(LIB_PATH.."DivinePred.lua") and FileExist(LIB_PATH.."DivinePred.luac") then
-      require "DivinePred"
-      self.DP = DivinePred()
-      table.insert(self.predTable, "DivinePrediction")
-    end
-
-    if FHPrediction then
-      table.insert(self.predTable, "FHPrediction")
-    end
-
-    if FileExist(LIB_PATH .. "HPrediction.lua") then
-      if _G.HP then
-        self.HP = _G.HP
-        table.insert(self.predTable, "HPrediction")
-      else
-        require("HPrediction")
-        self.HP = HPrediction()
-        _G.HP = self.HP
-        table.insert(self.predTable, "HPrediction")
-      end
-    end
-
-    if FileExist(LIB_PATH .. "KPrediction.lua") then
-      if _G.KP then
-        self.KP = _G.KP
-        table.insert(self.predTable, "KPrediction")
-      else
-        require("KPrediction")
-        self.KP = KPrediction()
-        _G.KP = self.KP
-        table.insert(self.predTable, "KPrediction")
-      end
-    end
-
-    self:Update()
-    DelayAction(function() self:Loaded() end, 3)
-    return self
-  end
+	if not _G.UPLloaded then
+		_G.UPLversion = 8
+		_G.UPLautoupdate = true
+		_G.UPLloaded = false
+		self.ActiveP = 1
+		self.LastRequest = 0
+		self.Config = nil
+		self.predTable = {}
+		self.Spells  = {
+			FH={},
+			KP={},
+			HP={},
+			DP={},
+			VP={},
+			SP={}
+		}
+		local possiblePredictions = {
+			{"FH", "FHPrediction", function() return FHPrediction ~= nil end, 1.1, 1, 2, 2},
+			{"KP", "KPrediction", function() return FileExist(LIB_PATH .. "KPrediction.lua") end, 1.75, 0, 3, 2},
+			{"HP", "HPrediction", function() return FileExist(LIB_PATH .. "HPrediction.lua") end, 1.05, 0, 3, 2},
+			{"DP", "DivinePred", function() return FileExist(LIB_PATH .. "DivinePred.lua") and FileExist(LIB_PATH .. "DivinePred.luac") end, 50, 0, 100, 0},
+			{"VP", "VPrediction", function() return FileExist(LIB_PATH .. "VPrediction.lua") end, 2, 1, 3, 0},
+			{"SP", "SPrediction", function() return FileExist(LIB_PATH .. "SPrediction.lua") end, 1, 1, 3, 0}
+		}
+		for i=1, #possiblePredictions do
+			local pPred = possiblePredictions[i]
+			if pPred[3]() then
+				table.insert(self.predTable, {pPred[1], pPred[2], pPred[4], pPred[5], pPred[6], pPred[7]})
+			end
+		end
+		self.slotToString = {[-6] = "P", [-5] = "R2", [-4] = "E2", [-3] = "W2", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R"}
+		self:Update()
+		DelayAction(function() self:Loaded() end, 3)
+		return self
+	end
 end
 
 function UPL:Update()
-  local UPL_UPDATE_HOST = "raw.githubusercontent.com"
-  local UPL_UPDATE_PATH = "/nebelwolfi/BoL/master/Common/UPL.lua"
-  local UPL_UPDATE_FILE_PATH = LIB_PATH.."UPL.lua"
-  local UPL_UPDATE_URL = "https://"..UPL_UPDATE_HOST..UPL_UPDATE_PATH
-  if UPLautoupdate then
-    local UPLServerData = GetWebResult(UPL_UPDATE_HOST, "/nebelwolfi/BoL/master/Common/UPL.version")
-    if UPLServerData then
-      UPLServerVersion = type(tonumber(UPLServerData)) == "number" and tonumber(UPLServerData) or nil
-      if UPLServerVersion then
-        if tonumber(UPLversion) < UPLServerVersion then
-          self:Msg("New version available v"..UPLServerVersion)
-          self:Msg("Updating, please don't press F9")
-          DelayAction(function() DownloadFile(UPL_UPDATE_URL, UPL_UPDATE_FILE_PATH, function () self:Msg("Successfully updated. ("..UPLversion.." => "..UPLServerVersion.."), press F9 twice to load the updated version") end) end, 3)
-          return true
-        end
-      end
-    else
-      self:Msg("Error downloading version info")
-    end
-  end
-  return false
+	local UPL_UPDATE_HOST = "raw.githubusercontent.com"
+	local UPL_UPDATE_PATH = "/nebelwolfi/BoL/master/Common/UPL.lua"
+	local UPL_UPDATE_FILE_PATH = LIB_PATH.."UPL.lua"
+	local UPL_UPDATE_URL = "https://"..UPL_UPDATE_HOST..UPL_UPDATE_PATH
+	if UPLautoupdate then
+		local UPLServerData = GetWebResult(UPL_UPDATE_HOST, "/nebelwolfi/BoL/master/Common/UPL.version")
+		if UPLServerData then
+			UPLServerVersion = type(tonumber(UPLServerData)) == "number" and tonumber(UPLServerData) or nil
+			if UPLServerVersion then
+				if tonumber(UPLversion) < UPLServerVersion then
+					self:Msg("New version available v"..UPLServerVersion)
+					self:Msg("Updating, please don't press F9")
+					DelayAction(function() DownloadFile(UPL_UPDATE_URL, UPL_UPDATE_FILE_PATH, function () self:Msg("Successfully updated. ("..UPLversion.." => "..UPLServerVersion.."), press F9 twice to load the updated version") end) end, 3)
+					return true
+				end
+			end
+		else
+			self:Msg("Error downloading version info")
+		end
+	end
+	return false
 end
 
 function UPL:Loaded()
-  local preds = ""
-  for k,v in pairs(self.predTable) do
-    preds=preds.." "..v
-    if k ~= #self.predTable then preds=preds.."," end
-  end
-  self:Msg("Loaded the latest version (v"..UPLversion..")")
-  self:Msg("Detected predictions: "..preds)
-  UPLloaded = true
+	local preds = ""
+	for k,v in pairs(self.predTable) do
+		preds=preds.." "..v[2]
+		if k ~= #self.predTable then preds=preds.."," end
+	end
+	self:Msg("Loaded the latest version (v"..UPLversion..")")
+	self:Msg("Detected predictions: "..preds)
+	UPLloaded = true
 end
 
 function UPL:Msg(msg)
-  print("<font color=\"#ff0000\">[</font><font color=\"#ff2000\">U</font><font color=\"#ff4000\">n</font><font color=\"#ff5f00\">i</font><font color=\"#ff7f00\">f</font><font color=\"#ff9900\">i</font><font color=\"#ffb200\">e</font><font color=\"#ffcc00\">d</font><font color=\"#ffe500\">P</font><font color=\"#ffff00\">r</font><font color=\"#bfff00\">e</font><font color=\"#80ff00\">d</font><font color=\"#40ff00\">i</font><font color=\"#00ff00\">c</font><font color=\"#00ff40\">t</font><font color=\"#00ff80\">i</font><font color=\"#00ffbf\">o</font><font color=\"#00ffff\">n</font><font color=\"#00ccff\">L</font><font color=\"#0099ff\">i</font><font color=\"#0066ff\">b</font><font color=\"#0033ff\">r</font><font color=\"#0000ff\">a</font><font color=\"#2300ff\">r</font><font color=\"#4600ff\">y</font><font color=\"#6800ff\">]</font><font color=\"#8b00ff\">:</font> <font color=\"#FFFFFF\">"..msg.."</font>") 
-end
-
-function UPL:Predict(spell, source, Target)
-  if Target == nil then 
-    Target = source 
-    source = myHero
-  end
-  if not self:ValidRequest(spell) then return Vector(Target), -1, Vector(Target) end
-  if self:ActivePred(spell) == "VPrediction" then
-      return self:VPredict(Target, self.spellData[spell], source)
-  elseif self:ActivePred(spell) == "Prodiction" then
-      local Position, info = Prodiction.GetPrediction(Target, self.spellData[spell].range, self.spellData[spell].speed, self.spellData[spell].delay, self.spellData[spell].width, source)
-      if Position ~= nil and not info.mCollision() then
-        return Position, 2, Vector(Target)
-      else
-        return Vector(Target), 0, Vector(Target)
-      end
-  elseif self:ActivePred(spell) == "DivinePrediction" then
-      local State, Position, perc = self:DPredict(Target, spell, source)
-      if perc and Position then
-        return Position, perc/33, (Vector(Target)-Position):normalized()
-      else
-        return Vector(Target), 0, Vector(Target)
-      end
-  elseif self:ActivePred(spell) == "KPrediction" then
-      return self:KPredict(Target, spell, source)
-  elseif self:ActivePred(spell) == "HPrediction" then
-      return self:HPredict(Target, spell, source)
-  elseif self:ActivePred(spell) == "FHPrediction" then
-      return self:FHPredict(Target, spell, source)
-  elseif self:ActivePred(spell) == "SPrediction" then
-      return self.SP:Predict(Target, self.spellData[spell].range, self.spellData[spell].speed, self.spellData[spell].delay, self.spellData[spell].width, (myHero.charName == "Lux" or myHero.charName == "Veigar") and 1 or self.spellData[spell].collision, source)
-  end
+	print("<font color=\"#ff0000\">[</font><font color=\"#ff2000\">U</font><font color=\"#ff4000\">n</font><font color=\"#ff5f00\">i</font><font color=\"#ff7f00\">f</font><font color=\"#ff9900\">i</font><font color=\"#ffb200\">e</font><font color=\"#ffcc00\">d</font><font color=\"#ffe500\">P</font><font color=\"#ffff00\">r</font><font color=\"#bfff00\">e</font><font color=\"#80ff00\">d</font><font color=\"#40ff00\">i</font><font color=\"#00ff00\">c</font><font color=\"#00ff40\">t</font><font color=\"#00ff80\">i</font><font color=\"#00ffbf\">o</font><font color=\"#00ffff\">n</font><font color=\"#00ccff\">L</font><font color=\"#0099ff\">i</font><font color=\"#0066ff\">b</font><font color=\"#0033ff\">r</font><font color=\"#0000ff\">a</font><font color=\"#2300ff\">r</font><font color=\"#4600ff\">y</font><font color=\"#6800ff\">]</font><font color=\"#8b00ff\">:</font> <font color=\"#FFFFFF\">"..msg.."</font>") 
 end
 
 function UPL:AddToMenu(Config)
-  Config:addParam("pred", "Prediction", SCRIPT_PARAM_LIST, self.ActiveP, self.predTable)
-  self.Config = Config
+	self.Config = Config or scriptConfig("Prediction Handler (UPL)", "Prediction"..myHero.charName)
+	if Config then self.Config:addSubMenu("Prediction Handler (UPL)", "Prediction"..myHero.charName) self.Config = self.Config["Prediction"..myHero.charName] end
 end
 
-function UPL:AddToMenu2(Config, state)
-  Config:addSubMenu("Prediction Menu", "UPL")
-  self.addToMenu2 = true
-  self.Config = Config.UPL
+function UPL:AddToMenu2(Config)
+	self.Config = Config or scriptConfig("Prediction Handler (UPL)", "Prediction"..myHero.charName)
+	if Config then self.Config:addSubMenu("Prediction Handler (UPL)", "Prediction"..myHero.charName) self.Config = self.Config["Prediction"..myHero.charName] end
 end
 
-function UPL:AddSpell(spell, array)
-  if not UPLloaded then
-    DelayAction(function() self:AddSpell(spell,array) end, 1)
-  else
-    self.spellData[spell] = {speed = array.speed, delay = array.delay, range = array.range, width = array.width, collision = array.collision, aoe = array.aoe, type = array.type, angle = array.angle, accel = array.accel}
-    if self.HP ~= nil then self:SetupHPredSpell(spell) end
-    if self.DP ~= nil then self:SetupDPredSpell(spell) end
-    if self.KP ~= nil then self:SetupKPredSpell(spell) end
-    if FHPrediction ~= nil then self:SetupFHPredSpell(spell) end
-    if self.addToMenu2 then
-      str = {[-3] = "P", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R", [4] = "R2"}
-      DelayAction(function() self.Config:addParam(str[spell], str[spell].." Prediction", SCRIPT_PARAM_LIST, self.ActiveP, self.predTable) end, 1)
-    end
-  end
+function UPL:GetFHSpell(data)
+	local spell = table.copy(data)
+	spell.radius = spell.width * 0.5
+	local fhType = 0
+	if spell.type == "linear" then
+		fhType = (not spell.speed or spell.speed == math.huge) and SkillShotType.SkillshotLine or SkillShotType.SkillshotMissileLine
+	elseif spell.type == "circular" then
+		fhType = SkillShotType.SkillshotCircle
+	elseif spell.type == "cone" then
+		fhType = SkillShotType.SkillshotCone
+	else
+		fhType = (not spell.speed or spell.speed == math.huge) and SkillShotType.SkillshotLine or SkillShotType.SkillshotMissileLine
+	end
+	return spell
 end
 
-function UPL:GetSpellData(spell)
-  return self.spellData[spell]
+function UPL:GetHPSpell(spell)
+	require "HPrediction"
+	if spell.type == "linear" then
+		if spell.speed ~= math.huge then 
+			if spell.collision then
+				return HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay, collisionM = spell.collision, collisionH = spell.collision})
+			else
+				return HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
+			end
+		else
+			return HPSkillshot({type = "PromptLine", range = spell.range, width = spell.width, delay = spell.delay})
+		end
+	elseif spell.type == "circular" then
+		if spell.speed ~= math.huge then 
+			return HPSkillshot({type = "DelayCircle", range = spell.range, speed = spell.speed, radius = .5*spell.width, delay = spell.delay})
+		else
+			return HPSkillshot({type = "PromptCircle", range = spell.range, radius = .5*spell.width, delay = spell.delay})
+		end
+	else
+		return HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
+	end
 end
 
-function UPL:FHPredict(Target, spell, source)
-  local str = ({[-3] = "P", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R", [4] = "R2"})[spell]
-  local col = (self.FHPSpells[spell].collision and source.charName) and ((source.charName=="Lux" or source.charName=="Veigar") and 1 or 0) or math.huge
-  local x, y, z = _G.FHPrediction.GetPrediction((str and FHPrediction.HasPreset(str)) and str or self.FHPSpells[spell], Target, source)
-  return x, z and (not z.collision or z.collision.amount < col) and y*1.5 or 0, Vector(Target)
+function UPL:GetKPSpell(spell)
+	require "KPrediction"
+	if spell.type == "linear" then
+		if spell.speed ~= math.huge then 
+			return KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
+		else
+			return KPSkillshot({type = "PromptLine", range = spell.range, width = spell.width, delay = spell.delay})
+		end
+	elseif spell.type == "circular" then
+		if spell.speed ~= math.huge then 
+			return KPSkillshot({type = "DelayCircle", range = spell.range, speed = spell.speed, radius = .5*spell.width, delay = spell.delay})
+		else
+			return KPSkillshot({type = "PromptCircle", range = spell.range, radius = .5*spell.width, delay = spell.delay})
+		end
+	else
+		if spell.angle then
+			if spell.speed ~= math.huge then
+				return KPSkillshot({type = "DelayArc", range = spell.range, angle = spell.angle, speed = spell.speed, delay = spell.delay})
+			else
+				return KPSkillshot({type = "PromptArc", range = spell.range, angle = spell.angle, delay = spell.delay})
+			end
+		else
+			return KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
+		end
+	end
 end
 
-function UPL:KPredict(Target, spell, source)
-  if self.spellData[spell].collision and (myHero.charName=="Lux" or myHero.charName=="Veigar") then
-    self.KPSpells[spell].penetration = 1
-  end
-  local x, y, z1, z2 = self.KP:GetPrediction(self.KPSpells[spell], Target, source, nil, self.spellData[spell].aoe)
-  return x, y, Vector(Target)
+function UPL:GetDPSpell(spell)
+	require "DivinePred"
+	local col = spell.collision and ((myHero.charName=="Lux" or myHero.charName=="Veigar") and 1 or 0) or math.huge
+	if spell.type == "circular" then
+		Spell = CircleSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
+	elseif spell.type == "cone" then
+		Spell = ConeSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
+	else
+		Spell = LineSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
+	end
+	local spellString = self.slotToString[spell]
+	self.DP:bindSS(spellString, Spell, 1)
+	return spellString
 end
 
-function UPL:HPredict(Target, spell, source)
-  local col = self.spellData[spell].collision and ((myHero.charName=="Lux" or myHero.charName=="Veigar") and 1 or 0) or math.huge
-  local x, y, z = self.HP:GetPredict(self.HPSpells[spell], Target, source, col)
-  return x, y*2, z
+function UPL:GetVPSpell(data)
+	require "VPrediction"
+	return data
 end
 
-function UPL:SetupHPredSpell(spell)
-  k = spell
-  spell = self.spellData[k]
-  if spell.type == "linear" then
-      if spell.speed ~= math.huge then 
-        if spell.collision then
-          self.HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay, collisionM = spell.collision, collisionH = spell.collision})
-        else
-          self.HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
-        end
-      else
-        self.HPSpells[k] = HPSkillshot({type = "PromptLine", range = spell.range, width = spell.width, delay = spell.delay})
-      end
-  elseif spell.type == "circular" then
-      if spell.speed ~= math.huge then 
-        self.HPSpells[k] = HPSkillshot({type = "DelayCircle", range = spell.range, speed = spell.speed, radius = .5*spell.width, delay = spell.delay})
-      else
-        self.HPSpells[k] = HPSkillshot({type = "PromptCircle", range = spell.range, radius = .5*spell.width, delay = spell.delay})
-      end
-  else --Cone!
-    self.HPSpells[k] = HPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
-  end
+function UPL:GetSPSpell(data)
+	require "SPrediction"
+	return data
 end
 
-function UPL:SetupKPredSpell(spell)
-  k = spell
-  spell = self.spellData[k]
-  if not self.KPSpells then self.KPSpells = {} end
-  if spell.type == "linear" then
-      if spell.speed ~= math.huge then 
-        self.KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
-      else
-        self.KPSpells[k] = KPSkillshot({type = "PromptLine", range = spell.range, width = spell.width, delay = spell.delay})
-      end
-  elseif spell.type == "circular" then
-      if spell.speed ~= math.huge then 
-        self.KPSpells[k] = KPSkillshot({type = "DelayCircle", range = spell.range, speed = spell.speed, radius = .5*spell.width, delay = spell.delay})
-      else
-        self.KPSpells[k] = KPSkillshot({type = "PromptCircle", range = spell.range, radius = .5*spell.width, delay = spell.delay})
-      end
-  else --Cone!
-    if spell.angle then
-      if spell.speed ~= math.huge then
-        self.KPSpells[k] = KPSkillshot({type = "DelayArc", range = spell.range, angle = spell.angle, speed = spell.speed, delay = spell.delay})
-      else
-        self.KPSpells[k] = KPSkillshot({type = "PromptArc", range = spell.range, angle = spell.angle, delay = spell.delay})
-      end
-    else -- But we probably don't have angle ...
-      self.KPSpells[k] = KPSkillshot({type = "DelayLine", range = spell.range, speed = spell.speed, width = spell.width, delay = spell.delay})
-    end
-  end
-end
-
-function UPL:SetupFHPredSpell(spell)
-  k = spell
-  spell = self.spellData[k]
-  if not self.FHPSpells then self.FHPSpells = {} end
-  local fhType = 0
-  spell.radius = spell.width / 2
-  if spell.type == "linear" then
-    fhType = (not spell.speed or spell.speed == math.huge) and SkillShotType.SkillshotLine or SkillShotType.SkillshotMissileLine
-  elseif spell.type == "circular" then
-    fhType = SkillShotType.SkillshotCircle
-  elseif spell.type == "cone" then
-    fhType = SkillShotType.SkillshotCone
-  end
-  local spell = table.copy(spell, true)
-  spell.type = fhType
-  self.FHPSpells[k] = spell
-end
-
-function UPL:SetupDPredSpell(spell)
-  local str = (({[-3] = "P", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R"})[spell])
-  local Spell = nil
-  local spell = self.spellData[spell]
-  local col = spell.collision and ((myHero.charName=="Lux" or myHero.charName=="Veigar") and 1 or 0) or math.huge
-  if spell.type == "circular" then
-    Spell = CircleSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
-  elseif spell.type == "cone" then
-    Spell = ConeSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
-  else
-    Spell = LineSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
-  end
-  self.DP:bindSS(str, Spell, 1)
-end
-
-function UPL:DPredict(Target, spell, source)
-  str = {[-3] = "P", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R"}
-  return self.DP:predict(str[spell], Target, Vector(source))
-end
-
---[[function UPL:DPredict(Target, spell, source) -- @Salt-Override-Desu
-  local nextPosition, minions, nextHealth = TargetPrediction(spell.range, spell.speed, spell.delay, spell.width, 99):GetPrediction(Target)
-  return nextPosition, 2, Vector(Target)
-end]]
-
-function UPL:VPredict(Target, spell, source)
-  if spell.type == "linear" then
-    if spell.aoe then
-      return self.VP:GetLineAOECastPosition(Target, spell.delay, spell.width, spell.range, spell.speed, myHero)
-    else
-      return self.VP:GetLineCastPosition(Target, spell.delay, spell.width, spell.range, spell.speed, myHero, spell.collision)
-    end
-    elseif spell.type == "circular" then
-    if spell.aoe then
-      return self.VP:GetCircularAOECastPosition(Target, spell.delay, spell.width, spell.range, spell.speed, myHero)
-    else
-      return self.VP:GetCircularCastPosition(Target, spell.delay, spell.width, spell.range, spell.speed, myHero, spell.collision)
-    end
-    elseif spell.type == "cone" then
-    if spell.aoe then
-      return self.VP:GetConeAOECastPosition(Target, spell.delay, spell.width, spell.range, spell.speed, myHero)
-    else
-      return self.VP:GetLineCastPosition(Target, spell.delay, spell.width, spell.range, spell.speed, myHero, spell.collision)
-    end
-  end
-end
-
-function UPL:ReturnPred(x, spell)
-    if self:ActivePred(spell) == "VPrediction" then
-      return self.VP
-    elseif self:ActivePred(spell) == "HPrediction" then
-      return self.HP
-    elseif self:ActivePred(spell) == "SPrediction" then
-      return self.SP
-    elseif self:ActivePred(spell) == "DivinePrediction" then
-      return self.DP
-    end
+function UPL:AddSpell(slot, spellData)
+	local toMenu = {}
+	for i=1, #self.predTable do
+		local cPred = self.predTable[i]
+		self.Spells[cPred[1]][slot] = self["Get"..cPred[1].."Spell"](self, spellData)
+		table.insert(toMenu, cPred[2])
+	end
+	local slotString = type(slot) == "string" and slot or type(slot) == "number" and self.slotToString[slot] or error("Please supply a valid slot.")
+	local pAm = #self.Config._param
+	if pAm > 0 then
+		self.Config:addParam("spacer"..pAm, "", SCRIPT_PARAM_INFO, "")
+	end
+	self.Config:addParam(slotString, ">> Spell: "..slotString, SCRIPT_PARAM_INFO, "")
+	self.Config:addParam(slotString.."Prediction", "Prediction: ", SCRIPT_PARAM_LIST, 1, toMenu)
+	self.Config:addParam(slotString.."HitChance", "HitChance: ", SCRIPT_PARAM_SLICE, self.predTable[1][3], self.predTable[1][4], self.predTable[1][5], self.predTable[1][6])
+	local function SetupMenu(i)
+		self.Config:modifyParam(slotString.."HitChance", "min", self.predTable[i][4])
+		self.Config:modifyParam(slotString.."HitChance", "max", self.predTable[i][5])
+		self.Config:modifyParam(slotString.."HitChance", "idc", self.predTable[i][6])
+		self.Config[slotString.."HitChance"] = self.predTable[i][3]
+	end
+	self.Config:setCallback(slotString.."Prediction", function(i)SetupMenu(i)end)SetupMenu(self.Config[slotString.."Prediction"])
 end
 
 function UPL:ActivePred(spell)
-    local str = {[-3] = "P", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R"}
-    local int = not self.addToMenu2 and (self.Config.pred and self.Config.pred or self.ActiveP) or (self.Config[str[spell]] and self.Config[str[spell]] or 1)
-    return tostring(self.predTable[int])
+	local slotString = type(slot) == "string" and slot or type(slot) == "number" and self.slotToString[slot] or error("Please supply a valid slot.")
+	local int = self.Config[slotString.."Prediction"] or 1
+	return tostring(self.predTable[int][2]), self.predTable[int]
 end
 
 function UPL:SetActive(pred)
-  for i=1,#self.predTable do
-    if self.predTable[i] == pred then
-      self.ActiveP = i
-    end
-  end
+	local slotString = type(slot) == "string" and slot or type(slot) == "number" and self.slotToString[slot] or error("Please supply a valid slot.")
+	for i=1,#self.predTable do
+		if self.predTable[i][2] == pred then
+			self.Config[slotString.."Prediction"] = i
+		end
+	end
 end
 
 function UPL:ValidRequest(x)
-    if GetInGameTimer() - self.LastRequest < self:TimeRequest(x) then
-        return false
-    else
-        self.LastRequest = GetInGameTimer()
-        return true
-    end
+	if GetInGameTimer() - self.LastRequest < self:TimeRequest(x) then
+		return false
+	else
+		self.LastRequest = GetInGameTimer()
+		return true
+	end
 end
 
 function UPL:TimeRequest(spell)
-    if self:ActivePred(spell) == "VPrediction" or self:ActivePred(spell) == "HPrediction" or self:ActivePred(spell) == "SPrediction" then
-      return 0.001
-    elseif self:ActivePred(spell) == "DivinePrediction" then
-      return 0.2
-    else
-      return 0.01
-    end
+	local aPred = self:ActivePred(spell)
+	if aPred == "VPrediction" or aPred == "SPrediction" then
+		return 0.001
+	elseif aPred == "DivinePred" then
+		return 0.1
+	else
+		return 0.01
+	end
+end
+
+function UPL:FHPredict(spell, source, target)
+	local spellString = self.slotToString[spell]
+	local spell = self.Spells.FH[spell]
+	local col = (self.FHPSpells[spell].collision and source.charName) and ((source.charName=="Lux" or source.charName=="Veigar") and 1 or 0) or math.huge
+	local x, y, z = _G.FHPrediction.GetPrediction(FHPrediction.HasPreset(spellString) and spellString or spell, target, source)
+	return x, (z and (not z.collision or z.collision.amount < col)) and y or 0, Vector(target)
+end
+
+function UPL:KPPredict(spell, source, target)
+	if not KP then KP = KPrediction() end
+	local spell = self.Spells.KP[spell]
+	if spell.collision and (myHero.charName=="Lux" or myHero.charName=="Veigar") then
+		spell.penetration = 1
+	end
+	local x, y, z1, z2 = KP:GetPrediction(spell, target, source, nil, spell.aoe)
+	return x, y, Vector(target)
+end
+
+function UPL:HPPredict(spell, source, target)
+	if not HP then HP = HPrediction() end
+	local spell = self.Spells.HP[spell]
+	local col = spell.collision and ((myHero.charName=="Lux" or myHero.charName=="Veigar") and 1 or 0) or math.huge
+	return HP:GetPredict(spell, target, source, col)
+end
+
+function UPL:DPPredict(spell, source, target)
+	if not DP then DP = DivinePred() end
+	return DP:predict(self.Spells.DP[spell], target, Vector(source))
+end
+
+function UPL:VPPredict(spell, source, target)
+	if not VP then VP = VPrediction() end
+	local spell = self.Spells.VP[spell]
+	if spell.type == "linear" then
+		if spell.aoe then
+			return VP:GetLineAOECastPosition(target, spell.delay, spell.width, spell.range, spell.speed, myHero)
+		else
+			return VP:GetLineCastPosition(target, spell.delay, spell.width, spell.range, spell.speed, myHero, spell.collision)
+		end
+	elseif spell.type == "circular" then
+		if spell.aoe then
+			return VP:GetCircularAOECastPosition(target, spell.delay, spell.width, spell.range, spell.speed, myHero)
+		else
+			return VP:GetCircularCastPosition(target, spell.delay, spell.width, spell.range, spell.speed, myHero, spell.collision)
+		end
+	elseif spell.type == "cone" then
+		if spell.aoe then
+			return VP:GetConeAOECastPosition(target, spell.delay, spell.width, spell.range, spell.speed, myHero)
+		else
+			return VP:GetLineCastPosition(target, spell.delay, spell.width, spell.range, spell.speed, myHero, spell.collision)
+		end
+	end
+end
+
+function UPL:SPPredict(spell, source, target)
+	if not SP then SP = SPrediction() end
+	local spell = self.Spells.SP[spell]
+	return SP:Predict(target, spell.range, spell.speed, spell.delay, spell.width, (myHero.charName == "Lux" or myHero.charName == "Veigar") and 1 or spell.collision, source)
+end
+
+function UPL:Predict(slot, source, target)
+	local slotString = type(slot) == "string" and slot or type(slot) == "number" and self.slotToString[slot] or error("Please supply a valid slot.")
+	local aPred = self.predTable[self.Config[slotString.."Prediction"]][1]
+	local a, b, c = self[aPred.."Predict"](self, slot, source, target)
+	return a, b >= self.Config[slotString.."HitChance"] and b or 0, c
 end

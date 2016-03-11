@@ -39,7 +39,7 @@ TrackerLoad("dUSfSclJkhEOpI3n")
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 8
+		_G.UPLversion = 9
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.ActiveP = 1
@@ -112,16 +112,6 @@ end
 
 function UPL:Msg(msg)
 	print("<font color=\"#ff0000\">[</font><font color=\"#ff2000\">U</font><font color=\"#ff4000\">n</font><font color=\"#ff5f00\">i</font><font color=\"#ff7f00\">f</font><font color=\"#ff9900\">i</font><font color=\"#ffb200\">e</font><font color=\"#ffcc00\">d</font><font color=\"#ffe500\">P</font><font color=\"#ffff00\">r</font><font color=\"#bfff00\">e</font><font color=\"#80ff00\">d</font><font color=\"#40ff00\">i</font><font color=\"#00ff00\">c</font><font color=\"#00ff40\">t</font><font color=\"#00ff80\">i</font><font color=\"#00ffbf\">o</font><font color=\"#00ffff\">n</font><font color=\"#00ccff\">L</font><font color=\"#0099ff\">i</font><font color=\"#0066ff\">b</font><font color=\"#0033ff\">r</font><font color=\"#0000ff\">a</font><font color=\"#2300ff\">r</font><font color=\"#4600ff\">y</font><font color=\"#6800ff\">]</font><font color=\"#8b00ff\">:</font> <font color=\"#FFFFFF\">"..msg.."</font>") 
-end
-
-function UPL:AddToMenu(Config)
-	self.Config = Config or scriptConfig("Prediction Handler (UPL)", "Prediction"..myHero.charName)
-	if Config then self.Config:addSubMenu("Prediction Handler (UPL)", "Prediction"..myHero.charName) self.Config = self.Config["Prediction"..myHero.charName] end
-end
-
-function UPL:AddToMenu2(Config)
-	self.Config = Config or scriptConfig("Prediction Handler (UPL)", "Prediction"..myHero.charName)
-	if Config then self.Config:addSubMenu("Prediction Handler (UPL)", "Prediction"..myHero.charName) self.Config = self.Config["Prediction"..myHero.charName] end
 end
 
 function UPL:GetFHSpell(data)
@@ -212,6 +202,22 @@ function UPL:GetSPSpell(data)
 	return data
 end
 
+function UPL:AddToMenu(Config)
+	self.Config = Config or scriptConfig("Prediction Handler (UPL)", "Prediction"..myHero.charName)
+	if Config then self.Config:addSubMenu("Prediction Handler (UPL)", "Prediction"..myHero.charName) self.Config = self.Config["Prediction"..myHero.charName] end
+end
+
+function UPL:AddToMenu2(Config)
+	self.Config = Config or scriptConfig("Prediction Handler (UPL)", "Prediction"..myHero.charName)
+	if Config then self.Config:addSubMenu("Prediction Handler (UPL)", "Prediction"..myHero.charName) self.Config = self.Config["Prediction"..myHero.charName] end
+	for i, v in pairs(self.Spells) do
+		for k, e in pairs(v) do
+			self:AddSpellToMenu(k)
+		end
+		break
+	end
+end
+
 function UPL:AddSpell(slot, spellData)
 	local toMenu = {}
 	for i=1, #self.predTable do
@@ -219,21 +225,31 @@ function UPL:AddSpell(slot, spellData)
 		self.Spells[cPred[1]][slot] = self["Get"..cPred[1].."Spell"](self, spellData)
 		table.insert(toMenu, cPred[2])
 	end
+	self:AddSpellToMenu(slot)
+end
+
+function UPL:AddSpellToMenu(slot)
 	local slotString = type(slot) == "string" and slot or type(slot) == "number" and self.slotToString[slot] or error("Please supply a valid slot.")
-	local pAm = #self.Config._param
-	if pAm > 0 then
-		self.Config:addParam("spacer"..pAm, "", SCRIPT_PARAM_INFO, "")
+	if self.Config and not self.Config[slotString] then
+		local toMenu = {}
+		for i=1, #self.predTable do
+			table.insert(toMenu, self.predTable[i][2])
+		end
+		local pAm = #self.Config._param
+		if pAm > 0 then
+			self.Config:addParam("spacer"..pAm, "", SCRIPT_PARAM_INFO, "")
+		end
+		self.Config:addParam(slotString, ">> Spell: "..slotString, SCRIPT_PARAM_INFO, "")
+		self.Config:addParam(slotString.."Prediction", "Prediction: ", SCRIPT_PARAM_LIST, 1, toMenu)
+		self.Config:addParam(slotString.."HitChance", "HitChance: ", SCRIPT_PARAM_SLICE, self.predTable[1][3], self.predTable[1][4], self.predTable[1][5], self.predTable[1][6])
+		local function SetupMenu(i)
+			self.Config:modifyParam(slotString.."HitChance", "min", self.predTable[i][4])
+			self.Config:modifyParam(slotString.."HitChance", "max", self.predTable[i][5])
+			self.Config:modifyParam(slotString.."HitChance", "idc", self.predTable[i][6])
+			self.Config[slotString.."HitChance"] = self.predTable[i][3]
+		end
+		self.Config:setCallback(slotString.."Prediction", function(i)SetupMenu(i)end)SetupMenu(self.Config[slotString.."Prediction"])
 	end
-	self.Config:addParam(slotString, ">> Spell: "..slotString, SCRIPT_PARAM_INFO, "")
-	self.Config:addParam(slotString.."Prediction", "Prediction: ", SCRIPT_PARAM_LIST, 1, toMenu)
-	self.Config:addParam(slotString.."HitChance", "HitChance: ", SCRIPT_PARAM_SLICE, self.predTable[1][3], self.predTable[1][4], self.predTable[1][5], self.predTable[1][6])
-	local function SetupMenu(i)
-		self.Config:modifyParam(slotString.."HitChance", "min", self.predTable[i][4])
-		self.Config:modifyParam(slotString.."HitChance", "max", self.predTable[i][5])
-		self.Config:modifyParam(slotString.."HitChance", "idc", self.predTable[i][6])
-		self.Config[slotString.."HitChance"] = self.predTable[i][3]
-	end
-	self.Config:setCallback(slotString.."Prediction", function(i)SetupMenu(i)end)SetupMenu(self.Config[slotString.."Prediction"])
 end
 
 function UPL:ActivePred(spell)

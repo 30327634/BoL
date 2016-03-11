@@ -194,15 +194,12 @@ function UPL:GetDPSpell(spell)
 	require "DivinePred"
 	local col = spell.collision and ((myHero.charName=="Lux" or myHero.charName=="Veigar") and 1 or 0) or math.huge
 	if spell.type == "circular" then
-		Spell = CircleSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
+		return CircleSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
 	elseif spell.type == "cone" then
-		Spell = ConeSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
+		return ConeSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
 	else
-		Spell = LineSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
+		return LineSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
 	end
-	local spellString = self.slotToString[spell]
-	self.DP:bindSS(spellString, Spell, 1)
-	return spellString
 end
 
 function UPL:GetVPSpell(data)
@@ -300,7 +297,14 @@ function UPL:HPPredict(spell, source, target)
 end
 
 function UPL:DPPredict(spell, source, target)
-	if not DP then DP = DivinePred() end
+	if not DP then 
+		DP = DivinePred()
+		for i, v in pairs(self.Spells.DP) do
+			local spellString = self.slotToString[i]
+			DP:bindSS(spellString, self.Spells.DP[i], 1)
+			self.Spells.DP[i] = spellString
+		end
+	end
 	return DP:predict(self.Spells.DP[spell], target, Vector(source))
 end
 

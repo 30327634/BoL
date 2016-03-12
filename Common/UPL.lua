@@ -40,7 +40,7 @@ TrackerLoad("dUSfSclJkhEOpI3n")
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 9
+		_G.UPLversion = 10
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.ActiveP = 1

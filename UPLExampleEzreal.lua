@@ -6,13 +6,12 @@ function OnLoad()
     Config:addParam("shoot", "Shoot", SCRIPT_PARAM_ONKEYDOWN, false, 32)
     Config:permaShow("shoot")
     targetSelector = TargetSelector(TARGET_LESS_CAST, 1500, DAMAGE_MAGIC, true)
-    Config:addParam("hc", "Accuracy (Default: 2)", SCRIPT_PARAM_SLICE, 2, 0, 3, 1)
 
     --Add prediction selector to the given scriptConfig-menu
-    UPL:AddToMenu(Config) 
+    UPL:AddToMenu(Config)
 
-    --Add spelldata with delay in seconds. care: width of a circular spell is radius
-    UPL:AddSpell(_Q, { speed = 1975, delay = 0.25, range = 1200, width = 50, collision = true, aoe = false, type = "linear" })
+    --Add spelldata with delay in seconds.
+    UPL:AddSpell(_Q, { speed = 2000, delay = 0.25, range = 1200, width = 120, collision = true, aoe = false, type = "linear" })
 end
 
 function OnTick()
@@ -20,8 +19,7 @@ function OnTick()
     if targetSelector.target == nil or not Config.shoot then return end
 
     CastPosition, HitChance, HeroPosition = UPL:Predict(_Q, myHero, targetSelector.target)
-    if HitChance >= Config.hc then
+    if HitChance >= 0 then
       CastSpell(_Q, CastPosition.x, CastPosition.z)
     end
 end
-

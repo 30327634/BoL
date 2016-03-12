@@ -40,7 +40,7 @@ TrackerLoad("dUSfSclJkhEOpI3n")
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 12
+		_G.UPLversion = 13
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0
@@ -117,15 +117,14 @@ end
 function UPL:GetFHSpell(data)
 	local spell = table.copy(data)
 	spell.radius = spell.width * 0.5
-	local fhType = 0
 	if spell.type == "linear" then
-		fhType = (not spell.speed or spell.speed == math.huge) and SkillShotType.SkillshotLine or SkillShotType.SkillshotMissileLine
+		spell.type = (not spell.speed or spell.speed == math.huge) and SkillShotType.SkillshotLine or SkillShotType.SkillshotMissileLine
 	elseif spell.type == "circular" then
-		fhType = SkillShotType.SkillshotCircle
+		spell.type = SkillShotType.SkillshotCircle
 	elseif spell.type == "cone" then
-		fhType = SkillShotType.SkillshotCone
+		spell.type = SkillShotType.SkillshotCone
 	else
-		fhType = (not spell.speed or spell.speed == math.huge) and SkillShotType.SkillshotLine or SkillShotType.SkillshotMissileLine
+		spell.type = (not spell.speed or spell.speed == math.huge) and SkillShotType.SkillshotLine or SkillShotType.SkillshotMissileLine
 	end
 	return spell
 end
@@ -303,7 +302,7 @@ end
 function UPL:FHPredict(spell, source, target)
 	local spellString = self.slotToString[spell]
 	local spell = self.Spells.FH[spell]
-	local col = (self.FHPSpells[spell].collision and source.charName) and ((source.charName=="Lux" or source.charName=="Veigar") and 1 or 0) or math.huge
+	local col = (spell.collision and source.charName) and ((source.charName=="Lux" or source.charName=="Veigar") and 1 or 0) or math.huge
 	local x, y, z = _G.FHPrediction.GetPrediction(FHPrediction.HasPreset(spellString) and spellString or spell, target, source)
 	return x, (z and (not z.collision or z.collision.amount < col)) and y or 0, Vector(target)
 end
@@ -311,9 +310,7 @@ end
 function UPL:KPPredict(spell, source, target)
 	if not KP then KP = KPrediction() end
 	local spell = self.Spells.KP[spell]
-	if spell.collision and (myHero.charName=="Lux" or myHero.charName=="Veigar") then
-		spell.penetration = 1
-	end
+	spell.penetration = (spell.collision and source.charName) and ((source.charName=="Lux" or source.charName=="Veigar") and 1 or 0) or math.huge
 	local x, y, z1, z2 = KP:GetPrediction(spell, target, source, nil, spell.aoe)
 	return x, y, Vector(target)
 end
@@ -369,6 +366,7 @@ end
 
 function UPL:Predict(slot, source, target)
 	local slotString = type(slot) == "string" and slot or type(slot) == "number" and self.slotToString[slot] or error("Please supply a valid slot.")
+	if not self.Config[slotString] then return nil, 0, nil end
 	local aPred = self.Config[slotString.."Prediction"] or 1
 	if not self:ValidRequest(self.predTable[aPred][2]) then return nil, 0, nil end
 	local aPred = self.predTable[self.Config[slotString.."Prediction"]][1]

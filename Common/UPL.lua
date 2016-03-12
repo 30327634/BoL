@@ -1,12 +1,13 @@
 --[[
-	_    _       _  __ _          _   _____              _ _      _   _               _      _ _                          
- | |  | |     (_)/ _(_)        | | |  __ \            | (_)    | | (_)             | |    (_) |                         
- | |  | |_ __  _| |_ _  ___  __| | | |__) | __ ___  __| |_  ___| |_ _  ___  _ __   | |     _| |__  _ __ __ _ _ __ _   _ 
- | |  | | '_ \| |  _| |/ _ \/ _` | |  ___/ '__/ _ \/ _` | |/ __| __| |/ _ \| '_ \  | |    | | '_ \| '__/ _` | '__| | | |
- | |__| | | | | | | | |  __/ (_| | | |   | | |  __/ (_| | | (__| |_| | (_) | | | | | |____| | |_) | | | (_| | |  | |_| |
-	\____/|_| |_|_|_| |_|\___|\__,_| |_|   |_|  \___|\__,_|_|\___|\__|_|\___/|_| |_| |______|_|_.__/|_|  \__,_|_|   \__, |
-																																																									 __/ |
-																																																									|___/ 
+	  _    _       _  __ _          _   _____              _ _      _   _               _      _ _                          
+	 | |  | |     (_)/ _(_)        | | |  __ \            | (_)    | | (_)             | |    (_) |                         
+	 | |  | |_ __  _| |_ _  ___  __| | | |__) | __ ___  __| |_  ___| |_ _  ___  _ __   | |     _| |__  _ __ __ _ _ __ _   _ 
+	 | |  | | '_ \| |  _| |/ _ \/ _` | |  ___/ '__/ _ \/ _` | |/ __| __| |/ _ \| '_ \  | |    | | '_ \| '__/ _` | '__| | | |
+	 | |__| | | | | | | | |  __/ (_| | | |   | | |  __/ (_| | | (__| |_| | (_) | | | | | |____| | |_) | | | (_| | |  | |_| |
+	  \____/|_| |_|_|_| |_|\___|\__,_| |_|   |_|  \___|\__,_|_|\___|\__|_|\___/|_| |_| |______|_|_.__/|_|  \__,_|_|   \__, |
+	                                                                                                                   __/ |
+	                                                                                                                  |___/ 
+																															
 	By Nebelwolfi
 
 
@@ -77,7 +78,7 @@ end
 
 function UPL:Update()
 	local UPL_UPDATE_HOST = "raw.githubusercontent.com"
-	local UPL_UPDATE_PATH = "/nebelwolfi/BoL/master/Common/UPL.lua"
+	local UPL_UPDATE_PATH = "/nebelwolfi/BoL/master/Common/UPL.lua?no-cache"
 	local UPL_UPDATE_FILE_PATH = LIB_PATH.."UPL.lua"
 	local UPL_UPDATE_URL = "https://"..UPL_UPDATE_HOST..UPL_UPDATE_PATH
 	if UPLautoupdate then
@@ -202,20 +203,34 @@ function UPL:GetSPSpell(data)
 	return data
 end
 
-function UPL:AddToMenu(Config)
+function UPL:AddToMenu(Config, Name)
 	self.Config = Config or scriptConfig("Prediction Handler (UPL)", "Prediction"..myHero.charName)
-	if Config then self.Config:addSubMenu("Prediction Handler (UPL)", "Prediction"..myHero.charName) self.Config = self.Config["Prediction"..myHero.charName] end
+	if Config then self.Config:addSubMenu(Name or "Prediction Handler (UPL)", "Prediction"..myHero.charName) self.Config = self.Config["Prediction"..myHero.charName] end
+	DelayAction(function()
+		for i, v in pairs(self.Spells) do
+			for i=-6, 4 do
+				if v[i] then
+					self:AddSpellToMenu(i)
+				end
+			end
+			break
+		end
+	end, 0.1)
 end
 
-function UPL:AddToMenu2(Config)
+function UPL:AddToMenu2(Config, Name)
 	self.Config = Config or scriptConfig("Prediction Handler (UPL)", "Prediction"..myHero.charName)
-	if Config then self.Config:addSubMenu("Prediction Handler (UPL)", "Prediction"..myHero.charName) self.Config = self.Config["Prediction"..myHero.charName] end
-	for i, v in pairs(self.Spells) do
-		for k, e in pairs(v) do
-			self:AddSpellToMenu(k)
+	if Config then self.Config:addSubMenu(Name or "Prediction Handler (UPL)", "Prediction"..myHero.charName) self.Config = self.Config["Prediction"..myHero.charName] end
+	DelayAction(function()
+		for i, v in pairs(self.Spells) do
+			for i=-6, 4 do
+				if v[i] then
+					self:AddSpellToMenu(i)
+				end
+			end
+			break
 		end
-		break
-	end
+	end, 0.1)
 end
 
 function UPL:AddSpell(slot, spellData)

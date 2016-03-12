@@ -40,7 +40,7 @@ TrackerLoad("dUSfSclJkhEOpI3n")
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 11.1
+		_G.UPLversion = 12
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0
@@ -81,7 +81,7 @@ function UPL:Update()
 	local UPL_UPDATE_FILE_PATH = LIB_PATH.."UPL.lua"
 	local UPL_UPDATE_URL = "https://"..UPL_UPDATE_HOST..UPL_UPDATE_PATH
 	if UPLautoupdate then
-		local UPLServerData = GetWebResult(UPL_UPDATE_HOST, "/nebelwolfi/BoL/master/Common/UPL.version")
+		local UPLServerData = GetWebResult(UPL_UPDATE_HOST, "/nebelwolfi/BoL/master/Common/UPL.version?no-cache="..math.random(10000,99999))
 		if UPLServerData then
 			UPLServerVersion = type(tonumber(UPLServerData)) == "number" and tonumber(UPLServerData) or nil
 			if UPLServerVersion then
@@ -267,12 +267,12 @@ function UPL:AddSpellToMenu(slot)
 end
 
 function UPL:ActivePred(spell)
-	local slotString = type(slot) == "string" and slot or type(slot) == "number" and self.slotToString[slot] or error("Please supply a valid slot.")
+	local slotString = type(spell) == "string" and spell or type(spell) == "number" and self.slotToString[spell] or error("Please supply a valid slot.")
 	local int = self.Config[slotString.."Prediction"] or 1
 	return tostring(self.predTable[int][2]), self.predTable[int]
 end
 
-function UPL:SetActive(pred)
+function UPL:SetActive(slot, pred)
 	local slotString = type(slot) == "string" and slot or type(slot) == "number" and self.slotToString[slot] or error("Please supply a valid slot.")
 	for i=1,#self.predTable do
 		if self.predTable[i][2] == pred then
@@ -290,8 +290,7 @@ function UPL:ValidRequest(x)
 	end
 end
 
-function UPL:TimeRequest(spell)
-	local aPred = self:ActivePred(spell)
+function UPL:TimeRequest(aPred)
 	if aPred == "VPrediction" or aPred == "SPrediction" then
 		return 0.001
 	elseif aPred == "DivinePred" then

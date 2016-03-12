@@ -40,7 +40,7 @@ TrackerLoad("dUSfSclJkhEOpI3n")
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 11
+		_G.UPLversion = 11.1
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0

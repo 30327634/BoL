@@ -214,7 +214,7 @@ function UPL:AddToMenu(Config, Name)
 			end
 			break
 		end
-	end, 0.1)
+	end, 1)
 end
 
 function UPL:AddToMenu2(Config, Name)
@@ -229,7 +229,7 @@ function UPL:AddToMenu2(Config, Name)
 			end
 			break
 		end
-	end, 0.1)
+	end, 1)
 end
 
 function UPL:AddSpell(slot, spellData)

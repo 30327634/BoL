@@ -239,7 +239,7 @@ function UPL:AddSpell(slot, spellData)
 		self.Spells[cPred[1]][slot] = self["Get"..cPred[1].."Spell"](self, spellData)
 		table.insert(toMenu, cPred[2])
 	end
-	self:AddSpellToMenu(slot)
+	DelayAction(function() self:AddSpellToMenu(slot) end, 1)
 end
 
 function UPL:AddSpellToMenu(slot)

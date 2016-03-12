@@ -19,7 +19,7 @@ function OnTick()
     if targetSelector.target == nil or not Config.shoot then return end
 
     CastPosition, HitChance, HeroPosition = UPL:Predict(_Q, myHero, targetSelector.target)
-    if HitChance >= 0 then
+    if CastPosition and HitChance >= 0 then
       CastSpell(_Q, CastPosition.x, CastPosition.z)
     end
 end

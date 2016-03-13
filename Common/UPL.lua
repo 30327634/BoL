@@ -40,7 +40,7 @@ TrackerLoad("dUSfSclJkhEOpI3n")
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 13
+		_G.UPLversion = 13.3
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0
@@ -366,10 +366,10 @@ end
 
 function UPL:Predict(slot, source, target)
 	local slotString = type(slot) == "string" and slot or type(slot) == "number" and self.slotToString[slot] or error("Please supply a valid slot.")
-	if not self.Config[slotString] then return nil, 0, nil end
+	if not self.Config or not self.Config[slotString] then return nil, 0, nil end
 	local aPred = self.Config[slotString.."Prediction"] or 1
 	if not self:ValidRequest(self.predTable[aPred][2]) then return nil, 0, nil end
 	local aPred = self.predTable[self.Config[slotString.."Prediction"]][1]
 	local a, b, c = self[aPred.."Predict"](self, slot, source, target)
-	return a, a and b >= self.Config[slotString.."HitChance"] and b or 0, c
+	return a, a and b and b >= self.Config[slotString.."HitChance"] and b or 0, c
 end

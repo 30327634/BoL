@@ -35,7 +35,7 @@ class "UPL"
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 13.36
+		_G.UPLversion = 13.361
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0
@@ -370,6 +370,6 @@ function UPL:Predict(slot, source, target)
 	if not self:ValidRequest(self.predTable[aPred][2]) then return nil, 0, nil end
 	local aPred = self.predTable[self.Config[slotString.."Prediction"]][1]
 	local a, b, c = self[aPred.."Predict"](self, slot, source, target)
-	print(slotString, ", ", b)
+	-- print(slotString, ", ", b) hue
 	return a, a and b and b >= self.Config[slotString.."HitChance"] and b or 0, c
 end

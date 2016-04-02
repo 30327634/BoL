@@ -35,7 +35,7 @@ class "UPL"
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 13.361
+		_G.UPLversion = 13.362
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0
@@ -330,7 +330,10 @@ function UPL:DPPredict(spell, source, target)
 			self.Spells.DP[i] = spellString
 		end
 	end
-	return DP:predict(self.Spells.DP[spell], target, Vector(source))
+	local status, hitPos, perc = DP:predict(self.Spells.DP[spell], target, Vector(source))
+	if hitPos then
+		return hitPos, perc, hitPos
+	end
 end
 
 function UPL:VPPredict(spell, source, target)
@@ -365,11 +368,11 @@ end
 
 function UPL:Predict(slot, source, target)
 	local slotString = type(slot) == "string" and slot or type(slot) == "number" and self.slotToString[slot] or error("Please supply a valid slot.")
-	if not self.Config or not self.Config[slotString] then return nil, 0, nil end
+	if not self.Config or not self.Config[slotString] then return nil, -1, nil end
 	local aPred = self.Config[slotString.."Prediction"] or 1
-	if not self:ValidRequest(self.predTable[aPred][2]) then return nil, 0, nil end
+	if not self:ValidRequest(self.predTable[aPred][2]) then return nil, -1, nil end
 	local aPred = self.predTable[self.Config[slotString.."Prediction"]][1]
 	local a, b, c = self[aPred.."Predict"](self, slot, source, target)
 	-- print(slotString, ", ", b) hue
-	return a, a and b and b >= self.Config[slotString.."HitChance"] and b or 0, c
+	return a, a and b and b >= self.Config[slotString.."HitChance"] and b or -1, c
 end

@@ -30,7 +30,6 @@ function HPrediction:__init()
     return
   end
   
-  self:Update()
   self:Variables()
   self:Menu()
   self:Metatables()

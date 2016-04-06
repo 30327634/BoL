@@ -47,23 +47,6 @@ end
 
 ---------------------------------------------------------------------------------
 
-function HPrediction:Update()
-
-  local ToUpdate = {}
-  
-  ToUpdate.Host = "raw.githubusercontent.com"
-  ToUpdate.VersionPath = "/BolHTTF/BoL/master/HTTF/Version/HPrediction.version"
-  ToUpdate.ScriptPath =  "/BolHTTF/BoL/master/HTTF/Common/HPrediction.lua"
-  ToUpdate.SavePath = LIB_PATH.."HPrediction.lua"
-  ToUpdate.CallbackUpdate = function(NewVersion, OldVersion) print("<font color=\"#00FA9A\"><b>[HPrediction] </b></font> <font color=\"#FFFFFF\">Updated to "..NewVersion..". </b></font>") end
-  ToUpdate.CallbackNoUpdate = function(OldVersion) print("<font color=\"#00FA9A\"><b>[HPrediction] </b></font> <font color=\"#FFFFFF\">No Updates Found</b></font>") end
-  ToUpdate.CallbackNewVersion = function(NewVersion) print("<font color=\"#00FA9A\"><b>[HPrediction] </b></font> <font color=\"#FFFFFF\">New Version found ("..NewVersion.."). Please wait until its downloaded</b></font>") end
-  ToUpdate.CallbackError = function(NewVersion) print("<font color=\"#00FA9A\"><b>[HPrediction] </b></font> <font color=\"#FFFFFF\">Error while Downloading. Please try again.</b></font>") end
-  HPredUpdate(HPrediction_Version, true, ToUpdate.Host, ToUpdate.VersionPath, ToUpdate.ScriptPath, ToUpdate.SavePath, ToUpdate.CallbackUpdate,ToUpdate.CallbackNoUpdate, ToUpdate.CallbackNewVersion,ToUpdate.CallbackError)
-end
-
----------------------------------------------------------------------------------
-
 function HPrediction:Variables()
 
   if myHero.charName == "Xerath" then

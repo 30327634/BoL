@@ -35,7 +35,7 @@ class "UPL"
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 13.362
+		_G.UPLversion = 13.37
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0
@@ -50,7 +50,7 @@ function UPL:__init()
 			SP={}
 		}
 		local possiblePredictions = {
-			{"FH", "FHPrediction", function() return FHPrediction ~= nil end, 1.1, 1, 2, 2},
+			{"FH", "FHPrediction", function() return FHPrediction ~= nil or FileExist(LIB_PATH .. "FHPrediction.lua") end, 1.1, 1, 2, 2},
 			{"KP", "KPrediction", function() return FileExist(LIB_PATH .. "KPrediction.lua") end, 1.75, 0, 3, 2},
 			{"HP", "HPrediction", function() return FileExist(LIB_PATH .. "HPrediction.lua") end, 1.05, 0, 3, 2},
 			{"DP", "DivinePred", function() return FileExist(LIB_PATH .. "DivinePred.lua") and FileExist(LIB_PATH .. "DivinePred.luac") end, 50, 0, 100, 0},
@@ -299,6 +299,7 @@ function UPL:TimeRequest(aPred)
 end
 
 function UPL:FHPredict(spell, source, target)
+	if not FHPrediction and FileExist(LIB_PATH .. "FHPrediction.lua") then require("FHPrediction") end
 	local spellString = self.slotToString[spell]
 	local spell = self.Spells.FH[spell]
 	local col = (spell.collision and source.charName) and ((source.charName=="Lux" or source.charName=="Veigar") and 1 or 0) or math.huge

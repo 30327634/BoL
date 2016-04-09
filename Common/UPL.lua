@@ -113,13 +113,13 @@ function UPL:GetFHSpell(data)
 	local spell = table.copy(data)
 	spell.radius = spell.width * 0.5
 	if spell.type == "linear" then
-		spell.type = (not spell.speed or spell.speed == math.huge) and SkillShotType.SkillshotLine or SkillShotType.SkillshotMissileLine
+		spell.type = (not spell.speed or spell.speed == math.huge) and 3 or 1
 	elseif spell.type == "circular" then
-		spell.type = SkillShotType.SkillshotCircle
+		spell.type = 2
 	elseif spell.type == "cone" then
-		spell.type = SkillShotType.SkillshotCone
+		spell.type = 4
 	else
-		spell.type = (not spell.speed or spell.speed == math.huge) and SkillShotType.SkillshotLine or SkillShotType.SkillshotMissileLine
+		spell.type = (not spell.speed or spell.speed == math.huge) and 3 or 1
 	end
 	return spell
 end

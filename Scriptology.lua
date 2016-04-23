@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.485
+ScriptologyVersion       = 2.486
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -219,8 +219,8 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
         require "nPrediction"
         table.insert(predictionStringTable, "nPrediction")
       end
-      if FileExist(LIB_PATH.."FPrediction.lua") then
-        require "FPrediction"
+      if FileExist(LIB_PATH.."FHPrediction.lua") then
+        require "FHPrediction"
       end
       if FHPrediction then table.insert(predictionStringTable, "FHPrediction") end
       table.sort(predictionStringTable)
@@ -323,7 +323,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
         end
       end
       DelayAction(function()
-        for m, mode in pairs({Harass = {"Harass", 1.5}, LastHit = {"LastHit", 1}, Combo = {"Combo", 1.5}, LaneClear = {"LaneClear", 1}}) do
+        for m, mode in pairs({Harass = {"Harass", 1.1}, LastHit = {"LastHit", 1}, Combo = {"Combo", 1.1}, LaneClear = {"LaneClear", 1}}) do
           ScriptologyConfig.Prediction:addSubMenu(mode[1].." Settings", mode[1])
           for _=-2, 3 do
             if myHeroSpellData and myHeroSpellData[_] and myHeroSpellData[_].type and Config and (Config[mode[1]][str[_]] ~= nil or myHero.charName == "Yasuo") then
@@ -611,37 +611,37 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     function InitPermaShow()
       AddTickCallback(function()
         if Config.Draws.PermaShow then
-          CustomPermaShow(" - Scriptology Perma Show - ", nil, true, nil, nil, nil, 0)
+          CustomPermaShow2(" - Scriptology Perma Show - ", nil, true, nil, nil, nil, 0)
           local activeMode = nil
           local modes = {"LaneClear", "LastHit", "Harass", "Combo"}
           for i = 1, 4 do
             local mode = modes[i]
             if Config.kConfig[mode] then
               activeMode = mode
-              CustomPermaShow("Active Mode: "..mode, nil, Config.kConfig[mode], nil, ARGB(255,0,255,0), ARGB(255,255,0,0), 1)
+              CustomPermaShow2("Active Mode: "..mode, nil, Config.kConfig[mode], nil, ARGB(255,0,255,0), ARGB(255,255,0,0), 1)
               local spells = {"Q", "W", "E", "R"}
               for j = 1, 4 do
                 local spell = spells[j]
                 if Config[mode][spell] and Config[mode]["mana"..spell] then
                   if Config[mode]["mana"..spell] <= myHero.mana/myHero.maxMana*100 then
-                   CustomPermaShow("Use "..spell, Config[mode][spell], Config[mode][spell] ~= nil, ARGB(255, 0, 0, 0), ARGB(255,0,255,0), ARGB(255,255,0,0), 1+j)
+                   CustomPermaShow2("Use "..spell, Config[mode][spell], Config[mode][spell] ~= nil, ARGB(255, 0, 0, 0), ARGB(255,0,255,0), ARGB(255,255,0,0), 1+j)
                   else
-                    CustomPermaShow("Use "..spell.." (oom)", false, Config[mode][spell] ~= nil, ARGB(255, 0, 0, 0), ARGB(255,0,255,0), ARGB(255,255,0,255), 1+j)
+                    CustomPermaShow2("Use "..spell.." (oom)", false, Config[mode][spell] ~= nil, ARGB(255, 0, 0, 0), ARGB(255,0,255,0), ARGB(255,255,0,255), 1+j)
                   end
                 else
-                  CustomPermaShow("Use "..spell, Config[mode][spell], Config[mode][spell] ~= nil, ARGB(255, 0, 0, 0), ARGB(255,0,255,0), ARGB(255,255,0,0), 1+j)
+                  CustomPermaShow2("Use "..spell, Config[mode][spell], Config[mode][spell] ~= nil, ARGB(255, 0, 0, 0), ARGB(255,0,255,0), ARGB(255,255,0,0), 1+j)
                 end
               end
             end
           end
           if not activeMode then
             for i = 1, 5 do
-              CustomPermaShow("", false, false, nil, nil, nil, i)
+              CustomPermaShow2("", false, false, nil, nil, nil, i)
             end
           end
         else
-          CustomPermaShow("", false, false, nil, nil, nil, 0)
-          CustomPermaShow("", false, false, nil, nil, nil, 1)
+          CustomPermaShow2("", false, false, nil, nil, nil, 0)
+          CustomPermaShow2("", false, false, nil, nil, nil, 1)
         end
       end)
     end
@@ -1216,12 +1216,14 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     local BestHit = 0
     local objects = Mobs.objects
     for i, object in pairs(objects) do
-      local hit = CountObjectsNearPos(object.pos or object, range, width, objects)
-      if hit > BestHit and GetDistanceSqr(object) < range * range then
-        BestHit = hit
-        BestPos = Vector(object)
-        if BestHit == #objects then
-          break
+      if object and object.valid and not object.dead and object.visible and object.bTargetable then
+        local hit = CountObjectsNearPos(object.pos or object, range, width, objects)
+        if hit > BestHit and GetDistanceSqr(object) < range * range then
+          BestHit = hit
+          BestPos = Vector(object)
+          if BestHit == #objects then
+            break
+          end
         end
       end
     end
@@ -1262,7 +1264,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   function CountObjectsNearPos(pos, range, radius, objects)
     local n = 0
     for i, object in pairs(objects) do
-      if GetDistance(pos, object) <= radius then
+      if object and object.valid and not object.dead and object.visible and object.bTargetable and GetDistance(pos, object) <= radius then
         n = n + 1
       end
     end
@@ -1284,7 +1286,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     do
       local r = 0
       for i=0, 3 do
-        if Config and myHeroSpellData[i] and (myHeroSpellData[i].dmgAP or myHeroSpellData[i].dmgAD or myHeroSpellData[i].dmgTRUE) then
+        if myHeroSpellData[i] and (myHeroSpellData[i].dmgAP or myHeroSpellData[i].dmgAD or myHeroSpellData[i].dmgTRUE) then
           if myHeroSpellData[i].range and myHeroSpellData[i].range > 0 then
             if myHeroSpellData[i].range > r and myHeroSpellData[i].range < 2000 then
               r = myHeroSpellData[i].range
@@ -8457,10 +8459,10 @@ class "CScriptUpdate" -- {
     _G.CPS.LastCheck = 0
     _G._DrawText = DrawText
     DelayAction(function()  _G.CPS.OldCountDone = true end, 3)
-    DelayAction(function()  AddDrawCallback(_DrawCustomPermaShow) end, 0.1)
+    DelayAction(function()  AddDrawCallback(_DrawCustomPermaShow22) end, 0.1)
   end
 
-  function CustomPermaShow(TextVar, ValueVar, VisibleVar, PermaColorVar, OnColorVar, OffColorVar, IndexVar)
+  function CustomPermaShow2(TextVar, ValueVar, VisibleVar, PermaColorVar, OnColorVar, OffColorVar, IndexVar)
     if IndexVar then
       local ItsNew = true
       for i = 1,#_G.CPS.Index do
@@ -8514,7 +8516,7 @@ class "CScriptUpdate" -- {
     end
   end
 
-  function _GetPermaColor(PermaTable)
+  function _GetPermaColor2(PermaTable)
     if PermaTable.ValueVar == true then
       if PermaTable.OnColorVar == nil then
       if PermaTable.PermaColorVar == nil then
@@ -8548,7 +8550,7 @@ class "CScriptUpdate" -- {
     return TextVar,ColorVar
   end
 
-  function _DrawCustomPermaShow()
+  function _DrawCustomPermaShow22()
     _CPS_Master = GetSave("scriptConfig")["Master"]
     _CPS_Master.py1 = _CPS_Master.py
     _CPS_Master.py2 = _CPS_Master.py
@@ -8558,10 +8560,10 @@ class "CScriptUpdate" -- {
     _CPS_Master.cellSize = _CPS_Master.fontSize + 1
     _CPS_Master.width = WINDOW_W and round(WINDOW_W / 6.4) or 160
     _CPS_Master.row = _CPS_Master.width * 0.7
-    _CPS_Master.py1 = _G.CPS.StartY + _CPS_Master.cellSize
+    _CPS_Master.py1 = _G.CPS.StartY + _CPS_Master.cellSize * 2
     for i = 1, #_G.CPS.Index do
       if _G.CPS.Index[i].VisibleVar and not _G.HidePermaShow[_G.CPS.Index[i].TextVar] then
-      ValueTextVar, ColorVar = _GetPermaColor(_G.CPS.Index[i])
+      ValueTextVar, ColorVar = _GetPermaColor2(_G.CPS.Index[i])
       DrawLine(_CPS_Master.px - 1, _CPS_Master.py1 + _CPS_Master.midSize, _CPS_Master.px + _CPS_Master.row - 1, _CPS_Master.py1 + _CPS_Master.midSize, _CPS_Master.cellSize, _CPS_Master.color.lgrey)
       _DrawText(_G.CPS.Index[i].TextVar, _CPS_Master.fontSize, _CPS_Master.px, _CPS_Master.py1, _CPS_Master.color.grey)
       DrawLine(_CPS_Master.px + _CPS_Master.row, _CPS_Master.py1 + _CPS_Master.midSize, _CPS_Master.px + _CPS_Master.width + 1, _CPS_Master.py1 + _CPS_Master.midSize, _CPS_Master.cellSize, ColorVar)
@@ -8571,7 +8573,7 @@ class "CScriptUpdate" -- {
     end
     for i = 1, #_G.CPS.NoIndex do
       if _G.CPS.NoIndex[i].VisibleVar and not _G.HidePermaShow[_G.CPS.NoIndex[i].TextVar] then
-      ValueTextVar, ColorVar = _GetPermaColor(_G.CPS.NoIndex[i])
+      ValueTextVar, ColorVar = _GetPermaColor2(_G.CPS.NoIndex[i])
       DrawLine(_CPS_Master.px - 1, _CPS_Master.py1 + _CPS_Master.midSize, _CPS_Master.px + _CPS_Master.row - 1, _CPS_Master.py1 + _CPS_Master.midSize, _CPS_Master.cellSize, _CPS_Master.color.lgrey)
       _DrawText(_G.CPS.NoIndex[i].TextVar, _CPS_Master.fontSize, _CPS_Master.px, _CPS_Master.py1, _CPS_Master.color.grey)
       DrawLine(_CPS_Master.px + _CPS_Master.row, _CPS_Master.py1 + _CPS_Master.midSize, _CPS_Master.px + _CPS_Master.width + 1, _CPS_Master.py1 + _CPS_Master.midSize, _CPS_Master.cellSize, ColorVar)

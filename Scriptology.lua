@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.486
+ScriptologyVersion       = 2.487
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -939,7 +939,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
   function ResetAA()
     if _G.NebelwolfisOrbWalkerLoaded then
-      _G.NebelwolfisOrbWalker.orbTable.lastAA = 0
+      _G.NebelwolfisOrbWalker:ResetAA()
     elseif _Pewalk then
     elseif _G.MMA_IsLoaded then
       _G.MMA_ResetAutoAttack()
@@ -1098,7 +1098,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
           activeMode = ScriptologyConfig.Prediction["Combo"]
         end
         local CastPosition, HitChance, Position = Predict(spell, source or myHero, target, activeMode)
-        if HitChance and HitChance >= activeMode["pred"..str[spell].."val"] then
+        if HitChance and CastPosition and HitChance >= activeMode["pred"..str[spell].."val"] then
           CastSpell(spell, CastPosition.x, CastPosition.z)
           return true;
         end
@@ -1236,13 +1236,15 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     source = source or myHero
     local objects = Mobs.objects
     for i, object in pairs(objects) do
-      local EndPos = Vector(source) + range * (Vector(object) - Vector(source)):normalized()
-      local hit = CountObjectsOnLineSegment(source, EndPos, width, objects)
-      if hit > BestHit and GetDistanceSqr(object) < range * range then
-        BestHit = hit
-        BestPos = Vector(object)
-        if BestHit == #objects then
-          break
+      if object and object.valid and not object.dead and object.visible and object.bTargetable then
+        local EndPos = Vector(source) + range * (Vector(object) - Vector(source)):normalized()
+        local hit = CountObjectsOnLineSegment(source, EndPos, width, objects)
+        if hit > BestHit and GetDistanceSqr(object) < range * range then
+          BestHit = hit
+          BestPos = Vector(object)
+          if BestHit == #objects then
+            break
+          end
         end
       end
     end
@@ -1252,10 +1254,12 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   function CountObjectsOnLineSegment(StartPos, EndPos, width, objects)
     local n = 0
     for i, object in pairs(objects) do
-      local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(StartPos, EndPos, object)
-      local w = width
-      if isOnSegment and GetDistanceSqr(pointSegment, object) < w * w and GetDistanceSqr(StartPos, EndPos) > GetDistanceSqr(StartPos, object) then
-        n = n + 1
+      if object and object.valid and not object.dead and object.visible and object.bTargetable then
+        local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(StartPos, EndPos, object)
+        local w = width
+        if isOnSegment and GetDistanceSqr(pointSegment, object) < w * w and GetDistanceSqr(StartPos, EndPos) > GetDistanceSqr(StartPos, object) then
+          n = n + 1
+        end
       end
     end
     return n
@@ -1287,9 +1291,10 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
       local r = 0
       for i=0, 3 do
         if myHeroSpellData[i] and (myHeroSpellData[i].dmgAP or myHeroSpellData[i].dmgAD or myHeroSpellData[i].dmgTRUE) then
-          if myHeroSpellData[i].range and myHeroSpellData[i].range > 0 then
-            if myHeroSpellData[i].range > r and myHeroSpellData[i].range < 2000 then
-              r = myHeroSpellData[i].range
+          if myHeroSpellData[i].range and (type(myHeroSpellData[i].range) == "number" and myHeroSpellData[i].range > 0 or type(myHeroSpellData[i].range) == "function" and myHeroSpellData[i].range() > 0) then
+            local ra = (type(myHeroSpellData[i].range) == "number" and myHeroSpellData[i].range or type(myHeroSpellData[i].range) == "function" and myHeroSpellData[i].range() or 0)
+            if ra > r and ra < 2000 then
+              r = ra
             end
           elseif myHeroSpellData[i].width and myHeroSpellData[i].width > 0 then
             if myHeroSpellData[i].width > r then
@@ -4660,6 +4665,9 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
   function KogMaw:Tick()
     targetSel.range = 900+myHero:GetSpellData(_R).level*300
+    if Target and not Target.dead and Target.visible and Target.bTargetable and GetDistance(Target) < targetSel.range and myHero:CanUseSpell(_R) == READY then
+      Cast(_R, Target)
+    end
   end
 
 -- }
@@ -5889,7 +5897,11 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     local a, b, c = Predict(_W, Ball, unit)
     if a and b >= ScriptologyConfig.Prediction.Combo["pred"..str[_W].."val"] then  
       CastSpell(_W) 
+      return
     end  
+    if GetDistanceSqr(unit, Ball) < 225*225 then
+      CastSpell(_W) 
+    end
   end
 
   function Orianna:CastR(unit)

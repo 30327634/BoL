@@ -123,6 +123,10 @@ _G.Champs = {
         [_E] = { speed = 887, delay = 0.500, range = 830, width = 0, collision = false, aoe = true, type = "circular"},
         [_R] = { speed = 1700, delay = 0.600, range = 20000, width = 120, collision = false, aoe = true, type = "circular"}
     },
+        ["Jhin"] = {
+        [_W] = { speed = math.huge, delay = 0.675, range = 2250, width = 80, collision = true, aoe = false, type = "linear"},
+        [_R] = { speed = 4000, delay = 0.250, range = 3500, width = 160, collision = true, aoe = false, type = "linear"}
+    },
         ["Jayce"] = {
         [_Q] = { speed = 2350, delay = 0.15, range = 1750, width = 70, collision = true, aoe = false, type = "linear"}
     },
@@ -305,7 +309,7 @@ _G.Champs = {
 
 if not _G.Champs[myHero.charName] then _G.Champs = nil collectgarbage() return end -- not supported :(
 
-AimbotVersion = 2.3
+AimbotVersion = 2.31
 
 function OnLoad()
   Aim = nil

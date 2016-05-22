@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.490
+ScriptologyVersion       = 2.491
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -29,14 +29,14 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     local ToUpdate = {}
     ToUpdate.UseHttps = true
     ToUpdate.Host = "raw.githubusercontent.com"
-    ToUpdate.VersionPath = "/nebelwolf/BoL/master/Scriptology.version"
-    ToUpdate.ScriptPath =  "/nebelwolf/BoL/master/Scriptology.lua"
+    ToUpdate.VersionPath = "/nebelwolfi/BoL/master/Scriptology.version"
+    ToUpdate.ScriptPath =  "/nebelwolfi/BoL/master/Scriptology.lua"
     ToUpdate.SavePath = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
     ToUpdate.CallbackUpdate = function(NewVersion,OldVersion) Msg("Updated from v"..OldVersion.." to "..NewVersion..". Please press F9 twice to reload.") end
     ToUpdate.CallbackNoUpdate = function(OldVersion) end
     ToUpdate.CallbackNewVersion = function(NewVersion) Msg("New version found v"..NewVersion..". Please wait until it's downloaded.") end
     ToUpdate.CallbackError = function(NewVersion) Msg("There was an error while updating.") end
-    CScriptUpdate(ScriptologyVersion,ToUpdate.UseHttps, ToUpdate.Host, ToUpdate.VersionPath, ToUpdate.ScriptPath, ToUpdate.SavePath, ToUpdate.CallbackUpdate,ToUpdate.CallbackNoUpdate, ToUpdate.CallbackNewVersion,ToUpdate.CallbackError)
+    ScriptologyScriptUpdate(ScriptologyVersion, ToUpdate.UseHttps, ToUpdate.Host, ToUpdate.VersionPath, ToUpdate.ScriptPath, ToUpdate.SavePath, ToUpdate.CallbackUpdate,ToUpdate.CallbackNoUpdate, ToUpdate.CallbackNewVersion,ToUpdate.CallbackError)
   end
 
   function LoadSpellData()
@@ -44,13 +44,13 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
       if pcall(function() spellData = loadfile(LIB_PATH .. "SpellData.lua")() end) then
         myHeroSpellData = spellData[myHero.charName]
         DelayAction(function()
-          CScriptUpdate(0, true, "raw.githubusercontent.com", "/nebelwolf/BoL/master/Scriptology.version", "/nebelwolf/BoL/master/Common/SpellData.lua", LIB_PATH.."SpellData.lua", function() end, function() end, function() end, LoadSpellData)
+          ScriptologyScriptUpdate(0, true, "raw.githubusercontent.com", "/nebelwolfi/BoL/master/Scriptology.version", "/nebelwolfi/BoL/master/Common/SpellData.lua", LIB_PATH.."SpellData.lua", function() end, function() end, function() end, LoadSpellData)
         end, 5)
       else
-        CScriptUpdate(0, true, "raw.githubusercontent.com", "/nebelwolf/BoL/master/Scriptology.version", "/nebelwolf/BoL/master/Common/SpellData.lua", LIB_PATH.."SpellData.lua", LoadSpellData, function() end, function() end, LoadSpellData)
+        ScriptologyScriptUpdate(0, true, "raw.githubusercontent.com", "/nebelwolfi/BoL/master/Scriptology.version", "/nebelwolfi/BoL/master/Common/SpellData.lua", LIB_PATH.."SpellData.lua", LoadSpellData, function() end, function() end, LoadSpellData)
       end
     else
-      CScriptUpdate(0, true, "raw.githubusercontent.com", "/nebelwolf/BoL/master/Scriptology.version", "/nebelwolf/BoL/master/Common/SpellData.lua", LIB_PATH.."SpellData.lua", LoadSpellData, function() end, function() end, LoadSpellData)
+      ScriptologyScriptUpdate(0, true, "raw.githubusercontent.com", "/nebelwolfi/BoL/master/Scriptology.version", "/nebelwolfi/BoL/master/Common/SpellData.lua", LIB_PATH.."SpellData.lua", LoadSpellData, function() end, function() end, LoadSpellData)
     end
   end
 
@@ -6302,7 +6302,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
           require "Nebelwolfi's Orb Walker"
           self:LoadOrb() 
         else
-          CScriptUpdate(0, true, "raw.githubusercontent.com", "/nebelwolf/BoL/master/Scriptology.version", "/nebelwolf/BoL/master/Common/Nebelwolfi's Orb Walker.lua", LIB_PATH.."Nebelwolfi's Orb Walker.lua", function() self:LoadOrb() end, function() end, function() end, function() self:LoadOrb() end)
+          ScriptologyScriptUpdate(0, true, "raw.githubusercontent.com", "/nebelwolfi/BoL/master/Scriptology.version", "/nebelwolfi/BoL/master/Common/Nebelwolfi's Orb Walker.lua", LIB_PATH.."Nebelwolfi's Orb Walker.lua", function() self:LoadOrb() end, function() end, function() end, function() self:LoadOrb() end)
         end
       end
     end, 1)
@@ -8298,9 +8298,9 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
 -- }
 
-class "CScriptUpdate" -- {
+class "ScriptologyScriptUpdate" -- {
 
-  function CScriptUpdate:__init(LocalVersion,UseHttps, Host, VersionPath, ScriptPath, SavePath, CallbackUpdate, CallbackNoUpdate, CallbackNewVersion,CallbackError)
+  function ScriptologyScriptUpdate:__init(LocalVersion, UseHttps, Host, VersionPath, ScriptPath, SavePath, CallbackUpdate, CallbackNoUpdate, CallbackNewVersion,CallbackError)
     if not ScriptologyAutoUpdate then return end
     self.LocalVersion = LocalVersion
     self.Host = Host
@@ -8317,11 +8317,11 @@ class "CScriptUpdate" -- {
     return self
   end
 
-  function CScriptUpdate:print(str)
+  function ScriptologyScriptUpdate:print(str)
     print('<font color="#FFFFFF">'..os.clock()..': '..str)
   end
 
-  function CScriptUpdate:CreateSocket(url)
+  function ScriptologyScriptUpdate:CreateSocket(url)
     if not self.LuaSocket then
       self.LuaSocket = require("socket")
     else
@@ -8341,7 +8341,7 @@ class "CScriptUpdate" -- {
     self.File = ""
   end
 
-  function CScriptUpdate:Base64Encode(data)
+  function ScriptologyScriptUpdate:Base64Encode(data)
     local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
     return ((data:gsub('.', function(x)
       local r,b='',x:byte()
@@ -8355,7 +8355,7 @@ class "CScriptUpdate" -- {
     end)..({ '', '==', '=' })[#data%3+1])
   end
 
-  function CScriptUpdate:GetOnlineVersion()
+  function ScriptologyScriptUpdate:GetOnlineVersion()
     if self.GotScriptVersion then return end
 
     self.Receive, self.Status, self.Snipped = self.Socket:receive(1024)
@@ -8417,8 +8417,8 @@ class "CScriptUpdate" -- {
     end
   end
 
-  function CScriptUpdate:DownloadUpdate()
-    if self.GotCScriptUpdate then return end
+  function ScriptologyScriptUpdate:DownloadUpdate()
+    if self.GotScriptologyScriptUpdate then return end
     self.Receive, self.Status, self.Snipped = self.Socket:receive(1024)
     if self.Status == 'timeout' and not self.Started then
       self.Started = true
@@ -8481,7 +8481,7 @@ class "CScriptUpdate" -- {
         end
       end
       end
-      self.GotCScriptUpdate = true
+      self.GotScriptologyScriptUpdate = true
     end
   end
 

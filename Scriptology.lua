@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.489
+ScriptologyVersion       = 2.490
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -7611,12 +7611,27 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   function Vayne:ProcessAttack(unit, spell)
     if unit and spell and unit.isMe and spell.name then
       if spell.name:lower():find("attack") then
-        if self.roll and sReady[_Q] then
-          CastSpell(_Q, mousePos.x, mousePos.z)
-        end
         if spell.target and spell.target.type == myHero.type and Config.Killsteal.E and sReady[_E] and EnemiesAround(spell.target, 750) == 1 and GetRealHealth(spell.target) < GetDmg(_E, myHero, spell.target)+GetDmg("AD", myHero, spell.target)+(GetStacks(spell.target) >= 1 and GetDmg(_W, myHero, spell.target) or 0) and GetDistance(spell.target) < 650 then
           local t = spell.target
           CastSpell(_E, spell.target)
+        end
+        if self.roll and sReady[_Q] then
+          if Config.kConfig.LaneClear then
+            local range = myHero.range + myHero.boundingRadius + 350
+            local minionTarget = nil
+            local spellTarget = spell.target
+            if not spellTarget or not spellTarget.valid or spellTarget.dead then return end
+            for i, minion in pairs(Mobs.objects) do
+              if minion and minion.visible and not minion.dead and minion.bTargetable and minion.team ~= myHero.team and minion.networkID ~= spellTarget.networkID and GetDistanceSqr(minion) < range * range and minion.maxHealth < 100000 then
+                if not minionTarget and (minion.team == 300 or GetDmg(_Q, myHero, minion) >= minion.health) then
+                  minionTarget = minion
+                  break;
+                end
+              end
+            end
+            if not minionTarget then return end
+          end
+          CastSpell(_Q, mousePos.x, mousePos.z)
         end
       end
     end

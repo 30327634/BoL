@@ -11,7 +11,7 @@
     By Nebelwolfi                                    
 ]]--
 
-if not VIP_USER then return end -- VIP only since we use packets
+-- if not VIP_USER then return end -- not anymore vip since bol api works for it now..
 --debugMode = true
 --[[ Skillshot list start ]]--
 _G.Champs = {

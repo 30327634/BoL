@@ -209,7 +209,7 @@ _G.Champs = {
         [_E] = { speed = 1500, delay = 0.50, range = 1000, width = 80, collision = false, aoe = false, type = "linear"}
     },
         ["Riven"] = {
-        [_R] = { speed = 2200, delay = 0.5, range = 1100, width = 200, collision = false, aoe = false, type = "cone"}
+        [_R] = { speed = 2200, delay = 0.5, range = 1100, width = 200, collision = false, aoe = false, type = "cone", spellname = "rivenizunablade"}
     },
         ["Rumble"] = {
         [_E] = { speed = 1200, delay = 0.250, range = 850, width = 90, collision = true, aoe = false, type = "linear"}
@@ -309,7 +309,7 @@ _G.Champs = {
 
 if not _G.Champs[myHero.charName] then _G.Champs = nil collectgarbage() return end -- not supported :(
 
-AimbotVersion = 2.31
+AimbotVersion = 2.32
 
 function OnLoad()
   Aim = nil
@@ -383,6 +383,7 @@ function Aimbot:Vars()
     self.secondCast = false
     self.lastopc = nil
     self.LastPacket = 0
+    self.requiresSpellName = {}
 end
 
 function Aimbot:Menu()
@@ -400,6 +401,9 @@ function Aimbot:Menu()
     self.Config.skConfig:addParam(self.str[k]..myHero.charName, ""..self.str[k], SCRIPT_PARAM_SLICE, 2, 0, 3, 0)
     self.toAim[k] = true
     UPL:AddSpell(k, v)
+    if v.spellname then
+        self.requiresSpellName[k] = v.spellname
+    end
   end
 
   self.Config:addParam("isstream", "Streaming Mode (needs reload)", SCRIPT_PARAM_ONOFF, false)
@@ -640,7 +644,7 @@ function Aimbot:Draw()
 end
 
 function Aimbot:CastSpell(i)
-    if self.Config.tog and not self.Config.off and not myHero.dead and self:IsFirstCast() then
+    if self.Config.tog and not self.Config.off and not myHero.dead and self:IsFirstCast() and (not self.requiresSpellName[i] or self.requiresSpellName[i] == myHero:GetSpellData(i).name:lower()) then
         if not self.toCast[i] and self.toAim[i] and self.Config.skConfig[self.str[i]..myHero.charName] > 0 then
             self.Target = self:GetCustomTarget(i)
             if self.Target ~= nil then

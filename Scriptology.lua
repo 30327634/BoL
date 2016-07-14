@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.491
+ScriptologyVersion       = 2.492
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -2725,7 +2725,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Blitzcrank:ApplyBuff(unit, source, buff)
-    if unit and unit.valid and buff and unit.isMe and source and source.valid and source.team == TEAM_ENEMY and source.type == myHero.type and self.countPullNow < os.clock()+4then
+    if unit and unit.valid and buff and unit.isMe and source and source.valid and source.team == TEAM_ENEMY and source.type == myHero.type and self.countPullNow < os.clock()+4 then
       if buff.name:find("Stun") then
         self.countNow = os.clock()
       end
@@ -6793,32 +6793,16 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 -- { Ryze
 
   function Ryze:__init()
-    self.passiveTracker = 0
   end
 
   function Ryze:Load()
     self:Menu()
   end
 
-  function Ryze:Draw()
-    if self.passiveTracker then
-      local pos = WorldToScreen(D3DXVECTOR3(myHero.x, myHero.y, myHero.z))
-      local str = self.passiveTracker < 5 and ""..self.passiveTracker or "COMBO!"
-      for i = -1, 1 do
-        for j = -1, 1 do
-          DrawText(str, 35, pos.x - 15 + i - GetTextArea(str, 35).x/2, pos.y + 40 + j, ARGB(255, 0, 0, 0)) 
-        end
-      end
-      DrawText(str, 35, pos.x - 15 - GetTextArea(str, 35).x/2, pos.y + 40, ARGB(255, 255, 0, 0)) 
-    end
-  end
-
   function Ryze:Menu()
     Config.Combo:addParam("Q", "Use Q", SCRIPT_PARAM_ONOFF, true)
     Config.Combo:addParam("W", "Use W", SCRIPT_PARAM_ONOFF, true)
     Config.Combo:addParam("E", "Use E", SCRIPT_PARAM_ONOFF, true)
-    Config.Combo:addParam("R", "Use R", SCRIPT_PARAM_ONOFF, true)
-    Config.Combo:addParam("Rs", "Force start Combo with R", SCRIPT_PARAM_ONOFF, true)
     Config.Harass:addParam("Q", "Use Q", SCRIPT_PARAM_ONOFF, true)
     Config.Harass:addParam("W", "Use W", SCRIPT_PARAM_ONOFF, true)
     Config.Harass:addParam("E", "Use E", SCRIPT_PARAM_ONOFF, true)
@@ -6851,117 +6835,57 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     AddGapcloseCallback(_W, myHeroSpellData[1].range, true, Config.Misc)
   end
 
-  function Ryze:ApplyBuff(unit, buff) 
-    if unit == nil or not unit.isMe or buff == nil then return end 
-    if buff.name:lower() == "ryzepassivestack" then self.passiveTracker = 1 end 
-    if buff.name:lower() == "ryzepassivecharged" then self.passiveTracker = 5 end 
-  end 
-
-  function Ryze:UpdateBuff(unit, buff, stacks) 
-    if unit == nil or not unit.isMe or buff == nil then return end 
-    if buff.name:lower() == "ryzepassivestack" then self.passiveTracker = stacks end 
-    if buff.name:lower() == "ryzepassivecharged" then self.passiveTracker = 5 end 
-  end 
-
-  function Ryze:RemoveBuff(unit, buff) 
-    if unit == nil or not unit.isMe or buff == nil then return end 
-    if buff.name:lower() == "ryzepassivestack" then self.passiveTracker = 0 end 
-    if buff.name:lower() == "ryzepassivecharged" then self.passiveTracker = 0 end 
-  end
-
   function Ryze:Combo()
     for _, enemy in pairs(GetEnemyHeroes()) do
       if ValidTarget(enemy, 900) then
-        local ready = 0
-        for _=0, 3 do
-          ready = ready + (sReady[_] and 1 or 0)
+        if sReady[_Q] and Config.Combo.Q then
+          Cast(_Q, enemy.pos)
+          return
         end
-        if self.passiveTracker + ready < 5 then
-          if sReady[_Q] and Config.Combo.Q then
-            Cast(_Q, enemy)
-          end
-          if sReady[_W] and Config.Combo.W and GetDistanceSqr(enemy) < myHeroSpellData[_W].range^2 then
-            CastSpell(_W, enemy)
-          end
-          if sReady[_E] and Config.Combo.E and GetDistanceSqr(enemy) < myHeroSpellData[_E].range^2 then
-            CastSpell(_E, enemy)
-          end
-        elseif self.passiveTracker >= 4 and (not sReady[_Q] or not Config.Combo.Q) and sReady[_R] and Config.Combo.R and Config.Combo.Rs then
-          Cast(_R)
-          return;
-        else
-          if myHero:CanUseSpell(_Q) == READY and Config.Combo[str[_Q]] and GetDistanceSqr(enemy) < myHeroSpellData[_Q].range^2 then
-            Cast(_Q, enemy.pos)
-            return;
-          end
-          for _=1, 3 do
-            if myHero:CanUseSpell(_) == READY and Config.Combo[str[_]] and GetDistanceSqr(enemy) < myHeroSpellData[_].range^2 then
-              Cast(_, enemy)
-              break;
-            end
-          end
+        if sReady[_E] and Config.Combo.E and GetDistanceSqr(enemy) < myHeroSpellData[_E].range^2 then
+          CastSpell(_E, enemy)
+          return
+        end
+        if sReady[_W] and Config.Combo.W and GetDistanceSqr(enemy) < myHeroSpellData[_W].range^2 then
+          CastSpell(_W, enemy)
+          return
         end
       end
     end
   end
 
   function Ryze:Harass()
-    local ready = 0
-    for _=0, 3 do
-      ready = ready + (sReady[_] and 1 or 0)
-    end
-    if self.passiveTracker + ready < 5 then
-      if sReady[_Q] and Config.Harass.Q then
-        Cast(_Q, Target)
+    local enemy = Target
+    if ValidTarget(enemy, 900) then
+      if sReady[_Q] and Config.Combo.Q then
+        Cast(_Q, enemy)
+        return
       end
-      if sReady[_W] and Config.Harass.W and GetDistanceSqr(Target) < myHeroSpellData[_W].range^2 then
-        CastSpell(_W, Target)
+      if sReady[_E] and Config.Combo.E and GetDistanceSqr(enemy) < myHeroSpellData[_E].range^2 then
+        CastSpell(_E, enemy)
+        return
       end
-      if sReady[_E] and Config.Harass.E and GetDistanceSqr(Target) < myHeroSpellData[_E].range^2 then
-        CastSpell(_E, Target)
-      end
-    else
-      if myHero:CanUseSpell(_Q) == READY and Config.Harass[str[_Q]] and GetDistanceSqr(enemy) < myHeroSpellData[_Q].range^2 then
-        Cast(_Q, Target.pos)
-        return;
-      end
-      for _=1, 2 do
-        if sReady[_] and Config.Harass[str[_]] and GetDistanceSqr(Target) < myHeroSpellData[_].range^2 then
-          Cast(_, Target)
-          break;
-        end
+      if sReady[_W] and Config.Combo.W and GetDistanceSqr(enemy) < myHeroSpellData[_W].range^2 then
+        CastSpell(_W, enemy)
+        return
       end
     end
   end
 
   function Ryze:LaneClear()
-    local ready = 0
-    for _=0, 3 do
-      ready = ready + (sReady[_] and 1 or 0)
-    end
     for _, target in pairs(Mobs.objects) do
       if target and not target.dead and target.visible then
-        if self.passiveTracker + ready < 5 then
-          if sReady[_Q] and Config.LaneClear.Q then
-            Cast(_Q, target)
-          end
-          if sReady[_W] and Config.LaneClear.W and GetDistanceSqr(target) < myHeroSpellData[_W].range^2 then
-            CastSpell(_W, target)
-          end
-          if sReady[_E] and Config.LaneClear.E and GetDistanceSqr(target) < myHeroSpellData[_E].range^2 then
-            CastSpell(_E, target)
-          end
-        else
-          if myHero:CanUseSpell(_Q) == READY and Config.LaneClear[str[_Q]] and GetDistanceSqr(enemy) < myHeroSpellData[_Q].range^2 then
-            Cast(_Q, target.pos)
-            return;
-          end
-          for _=1, 3 do
-            if sReady[_] and Config.LaneClear[str[_]] and Config.LaneClear["mana"..str[_]] < myHero.mana/myHero.maxMana*100 and GetDistanceSqr(target) < myHeroSpellData[_].range^2 then
-              Cast(_, target)
-              break;
-            end
-          end
+        if sReady[_Q] and Config.Combo.Q then
+          Cast(_Q, target.pos)
+          return
+        end
+        if sReady[_E] and Config.Combo.E and GetDistanceSqr(target) < myHeroSpellData[_E].range^2 then
+          CastSpell(_E, target)
+          return
+        end
+        if sReady[_W] and Config.Combo.W and GetDistanceSqr(target) < myHeroSpellData[_W].range^2 then
+          CastSpell(_W, target)
+          return
         end
       end
     end
@@ -6971,10 +6895,10 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     for i, minion in pairs(Mobs.objects) do 
       if minion and not minion.dead and minion.visible and minion.bTargetable then
         local health = GetRealHealth(minion) 
-        for _=0,3 do
+        for _=0,2 do
           if sReady[_] and GetDmg(_, myHero, minion) >= health and GetDistanceSqr(minion) < myHeroSpellData[_].range^2 and ((Config.kConfig.LastHit and Config.LastHit[str[_]] and Config.LastHit["mana"..str[_]] <= 100*myHero.mana/myHero.maxMana) or (Config.kConfig.LaneClear and Config.LaneClear[str[_]] and Config.LaneClear["mana"..str[_]] <= 100*myHero.mana/myHero.maxMana)) then
-          Cast(_, minion)
-          return;
+            Cast(_, minion)
+            return;
           end
         end
       end

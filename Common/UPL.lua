@@ -313,10 +313,10 @@ function UPL:FHPredict(spell, source, target)
 end
 
 function UPL:KPPredict(spell, source, target)
-	if not KP then KP = KPrediction() end
 	if not self.Spells.KP[spell] then
 		self.Spells.KP[spell] = self["GetKPSpell"](self, self.spellData[spell])
 	end
+	if not KP then KP = KPrediction() end
 	local spell = self.Spells.KP[spell]
 	spell.penetration = (spell.collision and source.charName) and ((source.charName=="Lux" or source.charName=="Veigar") and 2 or 1) or math.huge
 	local x, y, z1, z2 = KP:GetPrediction(spell, target, source, nil, spell.aoe)
@@ -324,10 +324,10 @@ function UPL:KPPredict(spell, source, target)
 end
 
 function UPL:HPPredict(spell, source, target)
-	if not HP then HP = HPrediction() end
 	if not self.Spells.HP[spell] then
 		self.Spells.HP[spell] = self["GetHPSpell"](self, self.spellData[spell])
 	end
+	if not HP then HP = HPrediction() end
 	local spell = self.Spells.HP[spell]
 	local col = spell.collision and ((myHero.charName=="Lux" or myHero.charName=="Veigar") and 1 or 0) or math.huge
 	return HP:GetPredict(spell, target, source, col)
@@ -349,10 +349,10 @@ function UPL:DPPredict(spell, source, target)
 end
 
 function UPL:VPPredict(spell, source, target)
-	if not VP then VP = VPrediction() end
 	if not self.Spells.VP[spell] then
 		self.Spells.VP[spell] = self["GetVPSpell"](self, self.spellData[spell])
 	end
+	if not VP then VP = VPrediction() end
 	local spell = self.Spells.VP[spell]
 	if spell.type == "linear" then
 		if spell.aoe then
@@ -376,6 +376,9 @@ function UPL:VPPredict(spell, source, target)
 end
 
 function UPL:SPPredict(spell, source, target)
+	if not self.Spells.SP[spell] then
+		self.Spells.SP[spell] = self["GetSPSpell"](self, self.spellData[spell])
+	end
 	if not SP then SP = SPrediction() end
 	local spell = self.Spells.SP[spell]
 	return SP:Predict(target, spell.range, spell.speed, spell.delay, spell.width, (myHero.charName == "Lux" or myHero.charName == "Veigar") and 1 or spell.collision, source)

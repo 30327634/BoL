@@ -35,7 +35,7 @@ class "UPL"
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 13.372
+		_G.UPLversion = 13.373
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0

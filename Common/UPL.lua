@@ -35,7 +35,7 @@ class "UPL"
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 13.371
+		_G.UPLversion = 13.372
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0
@@ -48,6 +48,9 @@ function UPL:__init()
 			DP={},
 			VP={},
 			SP={}
+		}
+		self.spellData = {
+			{},{},{},[0]={}
 		}
 		local possiblePredictions = {
 			{"FH", "FHPrediction", function() return FHPrediction ~= nil or FileExist(LIB_PATH .. "FHPrediction.lua") end, 1.1, 1, 2, 2},
@@ -65,7 +68,7 @@ function UPL:__init()
 		end
 		self.slotToString = {[-6] = "P", [-5] = "R2", [-4] = "E2", [-3] = "W2", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R"}
 		self:Update()
-		DelayAction(function() self:Loaded() end, 3)
+		DelayAction(function() self:Loaded() end, 0.25)
 		return self
 	end
 end
@@ -231,12 +234,7 @@ function UPL:AddToMenu2(Config, Name)
 end
 
 function UPL:AddSpell(slot, spellData)
-	local toMenu = {}
-	for i=1, #self.predTable do
-		local cPred = self.predTable[i]
-		self.Spells[cPred[1]][slot] = self["Get"..cPred[1].."Spell"](self, spellData)
-		table.insert(toMenu, cPred[2])
-	end
+	self.spellData[slot] = spellData
 	DelayAction(function() self:AddSpellToMenu(slot) end, 1)
 end
 
@@ -298,6 +296,10 @@ function UPL:TimeRequest(aPred)
 	end
 end
 
+function UPL:PredictHealth(object, time)
+	return FHPrediction and FHPrediction.PredictHealth(object, time) or VP and VP:GetPredictedHealth(unit, time) or object.health
+end
+
 function UPL:FHPredict(spell, source, target)
 	if not FHPrediction and FileExist(LIB_PATH .. "FHPrediction.lua") then require("FHPrediction") end
 	local spellString = self.slotToString[spell]
@@ -309,6 +311,9 @@ end
 
 function UPL:KPPredict(spell, source, target)
 	if not KP then KP = KPrediction() end
+	if not self.Spells.KP[spell] then
+		self.Spells.KP[spell] = self["GetKPSpell"](self, self.spellData[spell])
+	end
 	local spell = self.Spells.KP[spell]
 	spell.penetration = (spell.collision and source.charName) and ((source.charName=="Lux" or source.charName=="Veigar") and 2 or 1) or math.huge
 	local x, y, z1, z2 = KP:GetPrediction(spell, target, source, nil, spell.aoe)
@@ -317,6 +322,9 @@ end
 
 function UPL:HPPredict(spell, source, target)
 	if not HP then HP = HPrediction() end
+	if not self.Spells.HP[spell] then
+		self.Spells.HP[spell] = self["GetHPSpell"](self, self.spellData[spell])
+	end
 	local spell = self.Spells.HP[spell]
 	local col = spell.collision and ((myHero.charName=="Lux" or myHero.charName=="Veigar") and 1 or 0) or math.huge
 	return HP:GetPredict(spell, target, source, col)
@@ -339,6 +347,9 @@ end
 
 function UPL:VPPredict(spell, source, target)
 	if not VP then VP = VPrediction() end
+	if not self.Spells.VP[spell] then
+		self.Spells.VP[spell] = self["GetVPSpell"](self, self.spellData[spell])
+	end
 	local spell = self.Spells.VP[spell]
 	if spell.type == "linear" then
 		if spell.aoe then

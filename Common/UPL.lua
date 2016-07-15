@@ -302,6 +302,9 @@ end
 
 function UPL:FHPredict(spell, source, target)
 	if not FHPrediction and FileExist(LIB_PATH .. "FHPrediction.lua") then require("FHPrediction") end
+	if not self.Spells.FH[spell] then
+		self.Spells.FH[spell] = self["GetFHSpell"](self, self.spellData[spell])
+	end
 	local spellString = self.slotToString[spell]
 	local spell = self.Spells.FH[spell]
 	local col = (spell.collision and source.charName) and ((source.charName=="Lux" or source.charName=="Veigar") and 1 or 0) or math.huge

@@ -242,7 +242,7 @@ function UOL:ForceTarget(thing)
   elseif isPEW then
     _Pewalk.ForceTarget(thing)
   elseif isSxOrb then
-    SxOrb:EnableAttacks()
+    SxOrb:ForceTarget(thing)
   elseif isSOW then
     SOWVP.forcetarget = thing
   elseif isBFW then

@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.492
+ScriptologyVersion       = 2.493
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = true
 ScriptologyLoadAwareness = true
@@ -7245,16 +7245,16 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     Config.Combo:addParam("Q", "Use Q", SCRIPT_PARAM_ONOFF, true)
     Config.Combo:addParam("E", "Use E", SCRIPT_PARAM_ONOFF, true)
     Config.Combo:addParam("R", "Use R", SCRIPT_PARAM_ONOFF, true)
-    Config.Harrass:addParam("Q", "Use Q", SCRIPT_PARAM_ONOFF, true)
-    Config.Harrass:addParam("E", "Use E", SCRIPT_PARAM_ONOFF, true)
+    Config.Harass:addParam("Q", "Use Q", SCRIPT_PARAM_ONOFF, true)
+    Config.Harass:addParam("E", "Use E", SCRIPT_PARAM_ONOFF, true)
     Config.Killsteal:addParam("Q", "Use Q", SCRIPT_PARAM_ONOFF, true)
     Config.Killsteal:addParam("E", "Use E", SCRIPT_PARAM_ONOFF, true)
     Config.Killsteal:addParam("R", "Use R", SCRIPT_PARAM_ONOFF, true)
     if Ignite ~= nil then Config.Killsteal:addParam("I", "Ignite", SCRIPT_PARAM_ONOFF, true) end
-    Config.Harrass:addParam("manaQ", "Mana Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-    Config.Harrass:addParam("manaE", "Mana E", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
+    Config.Harass:addParam("manaQ", "Mana Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
+    Config.Harass:addParam("manaE", "Mana E", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
     Config.kConfig:addDynamicParam("Combo", "Combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
-    Config.kConfig:addDynamicParam("Harrass", "Harrass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+    Config.kConfig:addDynamicParam("Harass", "Harass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
     AddGapcloseCallback(_Q, myHeroSpellData[0].range, false, Config.Misc)
   end
 
@@ -7286,12 +7286,12 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     end
   end
 
-  function Thresh:Harrass()
+  function Thresh:Harass()
     for i, target in pairs(GetEnemyHeroes()) do
-      if target and myHero:CanUseSpell(_E) == READY and Config.Harrass.E and Config.Harrass.manaE <= 100*myHero.mana/myHero.maxMana and GetDistance(target,myHero) < myHeroSpellData[2].range then
+      if target and myHero:CanUseSpell(_E) == READY and Config.Harass.E and Config.Harass.manaE <= 100*myHero.mana/myHero.maxMana and GetDistance(target,myHero) < myHeroSpellData[2].range then
         Cast(_E, target)
       end
-      if target and myHero:CanUseSpell(_Q) == READY and Config.Harrass.Q and Config.Harrass.manaQ <= 100*myHero.mana/myHero.maxMana then
+      if target and myHero:CanUseSpell(_Q) == READY and Config.Harass.Q and Config.Harass.manaQ <= 100*myHero.mana/myHero.maxMana then
         Cast(_Q, target)
       end
     end

@@ -16,6 +16,10 @@ local AUTO_UPDATE = true
 
 --[[ Skillshot list start ]]--
 local tAimbotChamps = {
+    ["Fiora"] = {
+        [_Q] = { speed = 450, delay = 0.25, range = 650, width = 150, collision = false, aoe = true, type = "circular"},
+        [_E] = { speed = 1200, delay = 0.25, range = 1000, width = 150, collision = false, aoe = false, type = "linear"}
+    },
     ["Aatrox"] = {
         [_Q] = { speed = 450, delay = 0.25, range = 650, width = 150, collision = false, aoe = true, type = "circular"},
         [_E] = { speed = 1200, delay = 0.25, range = 1000, width = 150, collision = false, aoe = false, type = "linear"}
@@ -309,100 +313,99 @@ local tAimbotChamps = {
 --[[ Skillshot list end ]]--
 
 AddLoadCallback(function()
-    if not tAimbotChamps[myHero.charName] then tAimbotChamps = nil collectgarbage() return end -- not supported :(
-    local tAimbotSpells, tAimbotChamps, tAimbotStrings = table.copy(tAimbotChamps[myHero.charName]), nil, {"W", "E", "R", [0] = "Q"}
-    collectgarbage()
-    local enemyHeroes, enemyHeroesCount = GetEnemyHeroes(), #GetEnemyHeroes() -- lazy approach..
-    local iAimbotVersion = 3
+    if not tAimbotChamps[myHero.charName] then tAimbotChamps = nil;collectgarbage();return;end; -- not supported :(
+    local tAimbotSpells, tAimbotChamps, tAimbotStrings = table.copy(tAimbotChamps[myHero.charName]), nil, {"W", "E", "R", [0] = "Q"};
+    collectgarbage();
+    local enemyHeroes, enemyHeroesCount = GetEnemyHeroes(), #GetEnemyHeroes(); -- lazy approach..
+    local iAimbotVersion = 3;
     local function aimbotMsg(msg) 
-        print("<font color=\"#ff0000\">[</font><font color=\"#ff7f00\">A</font><font color=\"#ffbf00\">i</font><font color=\"#ffff00\">m</font><font color=\"#00ff00\">b</font><font color=\"#00ffff\">o</font><font color=\"#0080ff\">t</font><font color=\"#0000ff\">]</font><font color=\"#8b00ff\">:</font> <font color=\"#FFFFFF\">"..msg..".</font>") 
-    end
-    --collectgarbage()
+        print("<font color=\"#ff0000\">[</font><font color=\"#ff7f00\">A</font><font color=\"#ffbf00\">i</font><font color=\"#ffff00\">m</font><font color=\"#00ff00\">b</font><font color=\"#00ffff\">o</font><font color=\"#0080ff\">t</font><font color=\"#0000ff\">]</font><font color=\"#8b00ff\">:</font> <font color=\"#FFFFFF\">"..msg..".</font>");
+    end;
     (function(_)
         if AUTO_UPDATE then
-            local sAimbotServerData = GetWebResult("raw.githubusercontent.com", "/nebelwolfi/BoL/master/Aimbot.version".."?no-cache="..math.random(1,99999999))
+            local sAimbotServerData = GetWebResult("raw.githubusercontent.com", "/nebelwolfi/BoL/master/Aimbot.version".."?no-cache="..math.random(1,99999999));
             if sAimbotServerData then
-                iAimbotServerVersion = type(tonumber(sAimbotServerData)) == "number" and tonumber(sAimbotServerData) or nil
+                local iAimbotServerVersion = type(tonumber(sAimbotServerData)) == "number" and tonumber(sAimbotServerData) or nil;
                 if iAimbotServerVersion then
                     if tonumber(iAimbotVersion) < iAimbotServerVersion then
-                        aimbotMsg("New version available v"..iAimbotServerVersion)
-                        aimbotMsg("Updating, please don't press F9")
+                        aimbotMsg("New version available v"..iAimbotServerVersion);
+                        aimbotMsg("Updating, please don't press F9");
                         DelayAction(function() DownloadFile("https:/raw.githubusercontent.com".."/nebelwolfi/BoL/master/Aimbot.lua".."?no-cache="..math.random(1,99999999), SCRIPT_PATH.."Aimbot.lua", function() 
-                                aimbotMsg("Successfully updated. ("..iAimbotVersion.." => "..iAimbotServerVersion.."), press F9 twice to load the updated version") 
-                            end) 
-                        end, .5)
-                        return
-                    end
-                end
+                                aimbotMsg("Successfully updated. ("..iAimbotVersion.." => "..iAimbotServerVersion.."), press F9 twice to load the updated version");
+                            end)
+                        end, .5);
+                        return;
+                    end;
+                end;
             else
-                aimbotMsg("Error downloading version info")
-            end
+                aimbotMsg("Error downloading version info");
+            end;
         else
-            aimbotMsg("AUTO_UPDATE is disabled.")
-        end
+            aimbotMsg("AUTO_UPDATE is disabled.");
+        end;
         if not _G.UPLloaded then
             if FileExist(LIB_PATH .. "/UPL.lua") then
-                require("UPL")
-                _G.UPL = UPL()
-                _()
+                require("UPL");
+                _G.UPL = UPL();
+                _();
             else 
                 aimbotMsg("Downloading UPL, please don't press F9")
                 DelayAction(function() 
                     DownloadFile("https://raw.githubusercontent.com/bol/Common/UPL.lua".."?rand="..math.random(1,99999999), LIB_PATH.."UPL.lua", function() 
                         DelayAction(function()
-                            require("UPL")
-                            _G.UPL = UPL()
-                            _()
-                        end, .5)
-                    end) 
-                end, .5)
-            end
-        end
+                            require("UPL");
+                            _G.UPL = UPL();
+                            _();
+                        end, .5);
+                    end);
+                end, .5);
+            end;
+        end;
     end)(function() 
-        local mAimbotMenu = scriptConfig("[Aimbot] "..myHero.charName, "Aimbot3")
-        mAimbotMenu:addParam("empty1", " ", SCRIPT_PARAM_INFO, " ")
-        UPL:AddToMenu(mAimbotMenu)
+        local mAimbotMenu = scriptConfig("[Aimbot] "..myHero.charName, "Aimbot3");
+        mAimbotMenu:addParam("empty1", " ", SCRIPT_PARAM_INFO, " ");
+        UPL:AddToMenu(mAimbotMenu);
         for k = 0, 3 do
-            local v = tAimbotSpells[k]
+            local v = tAimbotSpells[k];
             if v then
-                UPL:AddSpell(k, v)
-                mAimbotMenu:addParam(tAimbotStrings[k], "Aimassist: " .. tAimbotStrings[k], SCRIPT_PARAM_ONOFF, false)
-            end
-        end
-        mAimbotMenu:addParam("empty2", " ", SCRIPT_PARAM_INFO, " ")
-        mAimbotMenu:addParam("ofmiceandmen", "Allow casting to mouse", SCRIPT_PARAM_ONOFF, false)
-        mAimbotMenu:addParam("info1", "^ If below hitchance threshold ^", SCRIPT_PARAM_INFO, " ")
-        mAimbotMenu:addParam("empty3", " ", SCRIPT_PARAM_INFO, " ")
-        mAimbotMenu:addParam("onoff", "Activate Aimbot", SCRIPT_PARAM_ONOFF, true)
-        mAimbotMenu:addParam("toggle", "Deactivate Aimbot", SCRIPT_PARAM_ONKEYDOWN, false, string.byte(" "))
+                UPL:AddSpell(k, v);
+                mAimbotMenu:addParam(tAimbotStrings[k], "Aimassist: " .. tAimbotStrings[k], SCRIPT_PARAM_ONOFF, false);
+            end;
+        end;
+        mAimbotMenu:addParam("empty2", " ", SCRIPT_PARAM_INFO, " ");
+        mAimbotMenu:addParam("ofmiceandmen", "Allow casting to mouse", SCRIPT_PARAM_ONOFF, false);
+        mAimbotMenu:addParam("info1", "^ If below hitchance threshold ^", SCRIPT_PARAM_INFO, " ");
+        mAimbotMenu:addParam("empty3", " ", SCRIPT_PARAM_INFO, " ");
+        mAimbotMenu:addParam("onoff", "Activate Aimbot", SCRIPT_PARAM_ONOFF, true);
+        mAimbotMenu:addParam("toggle", "Deactivate Aimbot", SCRIPT_PARAM_ONKEYDOWN, false, string.byte(" "));
         AddCastSpellCallback(function(i, _, __)
             if mAimbotMenu.onoff and not mAimbotMenu.toggle then
                 if mAimbotMenu[tAimbotStrings[i]] then
                     local _ = (function(I)
-                                    local c = 0 
+                                    local c = 0;
                                     for i = 0, enemyHeroesCount do 
-                                        local _ = enemyHeroes[i]
+                                        local _ = enemyHeroes[i];
                                         if _ and _.valid and not _.dead and _.visible then
-                                            local dx, dy = (_.x - myHero.x), (_.z - myHero.z)
-                                            local r = tAimbotSpells[I].range + tAimbotSpells[I].width *.5
+                                            local dx, dy = (_.x - myHero.x), (_.z - myHero.z);
+                                            local r = tAimbotSpells[I].range + tAimbotSpells[I].width *.5;
                                             if dx*dx + dy*dy < r * r then
-                                                c = c + 1
-                                            end
-                                            local CastPosition, Chance = UPL:Predict(I, myHero, _)
+                                                c = c + 1;
+                                            end;
+                                            local CastPosition, Chance = UPL:Predict(I, myHero, _);
                                             if CastPosition and Chance > 0 then 
                                                 return CastPosition;
                                             end;
                                         end;
                                     end;
-                                    return not (mAimbotMenu.ofmiceandmen or c == 0)
-                                end)(i)
+                                    return not (mAimbotMenu.ofmiceandmen or c == 0);
+                                end)(i);
                     if _ and _ ~= true then 
                         __.x,__.y,__.z=_.x,_.y,_.z; 
                     else 
-                        return not _ or BlockSpell()
-                    end
-                end
-            end
-        end)
-    end)
+                        return not _ or BlockSpell();
+                    end;
+                end;
+            end;
+        end);
+    end);
 end)

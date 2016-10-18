@@ -13,6 +13,7 @@
 
 --[[ Set this to false if you do not want it to auto update. ]] --
 local AUTO_UPDATE = true;
+local iAimbotVersion = 3.1;
 
 --[[ Skillshot list start ]]--
 local tAimbotChamps = {
@@ -109,8 +110,8 @@ local tAimbotChamps = {
         [_R] = { speed = 2100, delay = 0.219, range = 1000, width = 100, collision = false, aoe = false, type = "linear"}
     },
         ["Heimerdinger"] = {
-        [_W] = { speed = 900, delay = 0.500, range = 1325, width = 100, collision = true, aoe = false, type = "linear"},
-        [_E] = { speed = 2500, delay = 0.250, range = 970, width = 180, collision = false, aoe = true, type = "circular"}
+        [_W] = { speed = 2500, delay = 0.250, range = 1325, width = 100, collision = true, aoe = false, type = "linear"},
+        [_E] = { speed = 1750, delay = 0.325, range = 925, width = 135, collision = false, aoe = true, type = "circular"}
     },
         ["Irelia"] = {
         [_R] = { speed = 1700, delay = 0.250, range = 1200, width = 10, collision = false, aoe = false, type = "linear"}
@@ -313,7 +314,6 @@ AddLoadCallback(function()
     local tAimbotSpells, tAimbotChamps, tAimbotStrings = table.copy(tAimbotChamps[myHero.charName]), nil, {"W", "E", "R", [0] = "Q"};
     collectgarbage();
     local enemyHeroes, enemyHeroesCount = GetEnemyHeroes(), #GetEnemyHeroes(); -- lazy approach..
-    local iAimbotVersion = 3;
     local function aimbotMsg(msg) 
         print("<font color=\"#ff0000\">[</font><font color=\"#ff7f00\">A</font><font color=\"#ffbf00\">i</font><font color=\"#ffff00\">m</font><font color=\"#00ff00\">b</font><font color=\"#00ffff\">o</font><font color=\"#0080ff\">t</font><font color=\"#0000ff\">]</font><font color=\"#8b00ff\">:</font> <font color=\"#FFFFFF\">"..msg..".</font>");
     end;
@@ -380,7 +380,7 @@ AddLoadCallback(function()
                     local _ = (function(I)
                                     local c = 0;
                                     for i = 0, enemyHeroesCount do 
-                                        local _ = enemyHeroes[i];
+                                        local _ = GetTarget() -- enemyHeroes[i];
                                         if _ and _.valid and not _.dead and _.visible then
                                             local dx, dy = (_.x - myHero.x), (_.z - myHero.z);
                                             local r = tAimbotSpells[I].range + tAimbotSpells[I].width *.5;

@@ -13,7 +13,7 @@
 
 --[[ Set this to false if you do not want it to auto update. ]] --
 local AUTO_UPDATE = true;
-local iAimbotVersion = 3.1;
+local iAimbotVersion = 3.2;
 
 --[[ Skillshot list start ]]--
 local tAimbotChamps = {
@@ -380,7 +380,7 @@ AddLoadCallback(function()
                     local _ = (function(I)
                                     local c = 0;
                                     for i = 0, enemyHeroesCount do 
-                                        local _ = GetTarget() -- enemyHeroes[i];
+                                        local _ = enemyHeroes[i];
                                         if _ and _.valid and not _.dead and _.visible then
                                             local dx, dy = (_.x - myHero.x), (_.z - myHero.z);
                                             local r = tAimbotSpells[I].range + tAimbotSpells[I].width *.5;

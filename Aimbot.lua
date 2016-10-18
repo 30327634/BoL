@@ -326,7 +326,7 @@ AddLoadCallback(function()
                     if tonumber(iAimbotVersion) < iAimbotServerVersion then
                         aimbotMsg("New version available v"..iAimbotServerVersion);
                         aimbotMsg("Updating, please don't press F9");
-                        DelayAction(function() DownloadFile("https:/raw.githubusercontent.com".."/nebelwolfi/BoL/master/Aimbot.lua".."?no-cache="..math.random(1,99999999), SCRIPT_PATH.."Aimbot.lua", function() 
+                        DelayAction(function() DownloadFile("https://raw.githubusercontent.com".."/nebelwolfi/BoL/master/Aimbot.lua".."?no-cache="..math.random(1,99999999), SCRIPT_PATH.."Aimbot.lua", function() 
                                 aimbotMsg("Successfully updated. ("..iAimbotVersion.." => "..iAimbotServerVersion.."), press F9 twice to load the updated version");
                             end)
                         end, .5);

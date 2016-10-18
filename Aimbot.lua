@@ -16,10 +16,6 @@ local AUTO_UPDATE = true;
 
 --[[ Skillshot list start ]]--
 local tAimbotChamps = {
-    ["Fiora"] = {
-        [_Q] = { speed = 450, delay = 0.25, range = 650, width = 150, collision = false, aoe = true, type = "circular"},
-        [_E] = { speed = 1200, delay = 0.25, range = 1000, width = 150, collision = false, aoe = false, type = "linear"}
-    },
     ["Aatrox"] = {
         [_Q] = { speed = 450, delay = 0.25, range = 650, width = 150, collision = false, aoe = true, type = "circular"},
         [_E] = { speed = 1200, delay = 0.25, range = 1000, width = 150, collision = false, aoe = false, type = "linear"}

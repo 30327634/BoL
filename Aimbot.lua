@@ -395,8 +395,12 @@ AddLoadCallback(function()
                                         end;
                                     end;
                                     return not (mAimbotMenu.ofmiceandmen or c == 0)
-                                end)(i)
-                    if _ and _ ~= true then __.x,__.y,__.z=_.x,_.y,_.z; else return not _ or BlockSpell()end
+                            end)(i)
+                    if _ and _ ~= true then 
+                        __.x,__.y,__.z=_.x,_.y,_.z; 
+                    else 
+                        return not _ or BlockSpell()
+                    end
                 end
             end
         end)

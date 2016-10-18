@@ -11,10 +11,11 @@
     By Nebelwolfi                                    
 ]]--
 
--- if not VIP_USER then return end -- not anymore vip since bol api works for it now..
---debugMode = true
+--[[ Set this to false if you do not want it to auto update. ]] --
+local AUTO_UPDATE = true
+
 --[[ Skillshot list start ]]--
-_G.Champs = {
+local tAimbotChamps = {
     ["Aatrox"] = {
         [_Q] = { speed = 450, delay = 0.25, range = 650, width = 150, collision = false, aoe = true, type = "circular"},
         [_E] = { speed = 1200, delay = 0.25, range = 1000, width = 150, collision = false, aoe = false, type = "linear"}
@@ -42,8 +43,8 @@ _G.Champs = {
         [_Q] = { speed = 1800, delay = 0.250, range = 900, width = 70, collision = true, aoe = false, type = "linear"}
     },
         ["Brand"] = {
-        [_Q] = { speed = 1200, delay = 0.5, range = 1050, width = 80, collision = false, aoe = false, type = "linear"},
-        [_W] = { speed = 900, delay = 0.25, range = 1050, width = 275, collision = false, aoe = false, type = "linear"}
+        [_Q] = { speed = 1600, delay = 0.25, range = 1100, width = 60, collision = false, aoe = false, type = "linear"},
+        [_W] = { speed = math.huge, delay = 0.85, range = 1100, width = 210, collision = false, aoe = true, type = "linear"}
     },
         ["Braum"] = {
         [_Q] = { speed = 1600, delay = 225, range = 1000, width = 100, collision = false, aoe = false, type = "linear"},
@@ -307,427 +308,97 @@ _G.Champs = {
 }
 --[[ Skillshot list end ]]--
 
-if not _G.Champs[myHero.charName] then _G.Champs = nil collectgarbage() return end -- not supported :(
-
-AimbotVersion = 2.32
-
-function OnLoad()
-  Aim = nil
-  if not Update() then
-    Aim = Aimbot()
-    DelayAction(function() AutoupdaterMsg("Loaded the latest version (v"..AimbotVersion..")") end, 5)
-  end
-end
-
-function Update()
-  local AUTO_UPDATE = true
-  local UPDATE_HOST = "raw.githubusercontent.com"
-  local UPDATE_PATH = "/nebelwolfi/BoL/master/Aimbot.lua".."?no-cache="..math.random(1,10000)
-  local UPDATE_FILE_PATH = SCRIPT_PATH.."Aimbot.lua"
-  local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
-  if AUTO_UPDATE then
-    local AimbotServerData = GetWebResult(UPDATE_HOST, "/nebelwolfi/BoL/master/Aimbot.version".."?no-cache="..math.random(1,10000))
-    if AimbotServerData then
-      AimbotServerVersion = type(tonumber(AimbotServerData)) == "number" and tonumber(AimbotServerData) or nil
-      if AimbotServerVersion then
-        if tonumber(AimbotVersion) < AimbotServerVersion then
-          AutoupdaterMsg("New version available v"..AimbotServerVersion)
-          AutoupdaterMsg("Updating, please don't press F9")
-          DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..AimbotVersion.." => "..AimbotServerVersion.."), press F9 twice to load the updated version") end) end, 3)
-          return true
-        end
-      end
-    else
-      AutoupdaterMsg("Error downloading version info")
+AddLoadCallback(function()
+    if not tAimbotChamps[myHero.charName] then tAimbotChamps = nil collectgarbage() return end -- not supported :(
+    local tAimbotSpells, tAimbotChamps, tAimbotStrings = table.copy(tAimbotChamps[myHero.charName]), nil, {"W", "E", "R", [0] = "Q"}
+    collectgarbage()
+    local enemyHeroes, enemyHeroesCount = GetEnemyHeroes(), #GetEnemyHeroes() -- lazy approach..
+    local iAimbotVersion = 3
+    local function aimbotMsg(msg) 
+        print("<font color=\"#ff0000\">[</font><font color=\"#ff7f00\">A</font><font color=\"#ffbf00\">i</font><font color=\"#ffff00\">m</font><font color=\"#00ff00\">b</font><font color=\"#00ffff\">o</font><font color=\"#0080ff\">t</font><font color=\"#0000ff\">]</font><font color=\"#8b00ff\">:</font> <font color=\"#FFFFFF\">"..msg..".</font>") 
     end
-  end
-  if not _G.UPLloaded then
-    if FileExist(LIB_PATH .. "/UPL.lua") then
-        require("UPL")
-        _G.UPL = UPL()
-    else 
-        AutoupdaterMsg("Downloading UPL, please don't press F9")
-        DelayAction(function() DownloadFile("https://"..UPDATE_HOST.."/bol/Common/UPL.lua".."?rand="..math.random(1,10000), LIB_PATH.."UPL.lua", function () AutoupdaterMsg("Successfully downloaded UPL. Press F9 twice.") end) end, 3) 
-        return true
-    end
-  end
-  return false
-end
-
-function AutoupdaterMsg(msg) 
-    print("<font color=\"#ff0000\">[</font><font color=\"#ff7f00\">A</font><font color=\"#ffbf00\">i</font><font color=\"#ffff00\">m</font><font color=\"#00ff00\">b</font><font color=\"#00ffff\">o</font><font color=\"#0080ff\">t</font><font color=\"#0000ff\">]</font><font color=\"#8b00ff\">:</font> <font color=\"#FFFFFF\">"..msg..".</font>") 
-end
-
-class "Aimbot"
-
-function Aimbot:__init()
-  self:Vars()
-  self:Menu()
-  AddTickCallback(function() self:Tick() end)
-  AddDrawCallback(function() self:Draw() end)
-  AddMsgCallback(function(x,y) self:Msg(x,y) end)
-  AddCastSpellCallback(function(p) self:CastSpell(p) end)
-end
-function Aimbot:Vars()
-    self.data = _G.Champs[myHero.charName]
-    self.QReady, self.WReady, self.EReady, self.RReady = nil, nil, nil, nil
-    self.Target = nil
-    self.QSel, self.WSel, self.ESel, self.RSel = nil, nil, nil, nil
-    self.str = { [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R" }
-    --local key = { [_Q] = "Y", [_W] = "X", [_E] = "C", [_R] = "V" } soon
-    self.toCast = {[_Q] = false, [_W] = false, [_E] = false, [_R] = false}
-    self.toAim = {[_Q] = false, [_W] = false, [_E] = false, [_R] = false}
-    self.debugMode = debugMode
-    --self.opcs = {{0xA6, 0xE9, 0xE5, 0xE1, 0xDD}, {0x0A, 0x36, 0x16, 0xD4, 0xEC}, {0x139, 0xDA, 0x6E, 0x5B, 0x4B}, {0x95, 0x9D, 0xC4, 0xB8, 0x39}, {0x7B, 0x93, 0x0E, 0x8E, 0x0C}, {0x26, 0xB1, 0x26, 0x68, 0xE6}, {0xC0, 0x05, 0x6C, 0x44, 0x7B}, {0x29, 0x93, 0xC6, 0x1F, 0x09}, {0x140, 0x22, 0x9C, 0x39, 0x2D}, {0xE4, 0x23, 0x54, 0xED, 0x82}, {0x07, 0x15, 0xB9, 0x93, 0xE4}, {0xDF, 0x46, 0xEF, 0x0E, 0xCF}, {0x50, 0xAD, 0xED, 0x8D, 0xCD}, {0x9B, 0x6B, 0x6A, 0x69, 0x68}, {0x09, 0xC8, 0xF7, 0xF2, 0x33}, {0x10B, 0x68, 0xEE, 0xB1, 0xCE}, {0x87, 0xEC, 0x6C, 0x74, 0x98}, {0x00E9, 0x02, 0xD8, 0xB3, 0xE7}}
-    --self.opcpos = {22, 31, 7, 6, 14, 23, 10, 31, 6, 6, 14, 27, 31, 10, 27, 27, 23, 27}
-    self.secondCast = false
-    self.lastopc = nil
-    self.LastPacket = 0
-    self.requiresSpellName = {}
-end
-
-function Aimbot:Menu()
-
-  self.Config = scriptConfig("[Aimbot] "..myHero.charName, "Aimbot")
-  
-  --self.Config:addSubMenu("Settings", "misc")
-  --self.Config.misc:addParam("ser",  "Which LoL version?", SCRIPT_PARAM_LIST, 1, {"5.23", "5.22", "5.21", "5.20", "5.19", "5.18", "5.17", "5.16", "5.15", "5.14", "5.13", "5.12", "5.11", "5.10", "5.9", "5.8", "5.7"})
-  UPL:AddToMenu(self.Config)
- 
-  self.Config:addSubMenu("Supported skill settings", "skConfig")
-  self.Config.skConfig:addParam("nfo", "0 = Off, 1 = Predict/Rather Mouse, ", SCRIPT_PARAM_INFO,"")
-  self.Config.skConfig:addParam("nfn", "2 = Rather Predict/Mouse, 3 = Predict Only", SCRIPT_PARAM_INFO,"")
-  for k,v in pairs(self.data) do
-    self.Config.skConfig:addParam(self.str[k]..myHero.charName, ""..self.str[k], SCRIPT_PARAM_SLICE, 2, 0, 3, 0)
-    self.toAim[k] = true
-    UPL:AddSpell(k, v)
-    if v.spellname then
-        self.requiresSpellName[k] = v.spellname
-    end
-  end
-
-  self.Config:addParam("isstream", "Streaming Mode (needs reload)", SCRIPT_PARAM_ONOFF, false)
-  
-  self.Config:addParam("tog", "Aimbot on/off", SCRIPT_PARAM_ONKEYTOGGLE, true, string.byte("T"))
-  self.Config:addParam("off", "Aimbot disabled", SCRIPT_PARAM_ONKEYDOWN, false, string.byte(" "))
-
-  if not self.Config.isstream then
-    self.Config:permaShow("tog")
-    self.Config:permaShow("off")
-  end
-  
-  if self.toAim[0] then self.QSel = TargetSelector(TARGET_NEAR_MOUSE, self.data[0].range, DAMAGE_MAGIC, true) end
-  if self.toAim[1] then self.WSel = TargetSelector(TARGET_NEAR_MOUSE, self.data[1].range, DAMAGE_MAGIC, true) end
-  if self.toAim[2] then self.ESel = TargetSelector(TARGET_NEAR_MOUSE, self.data[2].range, DAMAGE_MAGIC, true) end
-  if self.toAim[3] then self.RSel = TargetSelector(TARGET_NEAR_MOUSE, self.data[3].range, DAMAGE_MAGIC, true) end
-end
-
-function Aimbot:Tick()
-  -- [[ Last hitter part ]] --
-  --if Config.lh and not myHero.dead and not recall then 
-  --end
-  -- [[ Real aimbot part ]] --
-  if self.Config.tog and not self.Config.off and not myHero.dead and self:IsFirstCast() and (self.toCast[0] or self.toCast[1] or self.toCast[2] or self.toCast[3]) and not self.secondCast then -- 
-      for i, spell in pairs(self.data) do
-          self.Target = self:GetCustomTarget(i)
-          if self.Target == nil or self.Target.dead then return end
-          if self.toCast[i] and self.Config.skConfig[self.str[i]..myHero.charName] > 0 and myHero:CanUseSpell(i) then
-              if self:IsJayceQ(i) then 
-                if myHero:CanUseSpell(_E) then 
-                    self.data[_Q] = { speed = 2350, delay = 0.15, range = 1750, width = 70, collision = true, aoe = false, type = "linear"}
-                    UPL:AddSpell(_Q, self.data[_Q])
-                    if myHero.hasMovePath then
-                        local pos = myHero + Vector(Vector(Vector(self.Target)-myHero):normalized()*(myHero.ms*.25)) + Vector(Vector(Vector(self.Target)-myHero):normalized()*(myHero.ms*.25)):perpendicular()
-                        CastSpell(_E, pos.x, pos.z)
-                    else
-                        local pos = myHero - Vector(Vector(Vector(self.Target)-myHero):normalized()*20):perpendicular()
-                        CastSpell(_E, pos.x, pos.z)
+    --collectgarbage()
+    (function(_)
+        if AUTO_UPDATE then
+            local sAimbotServerData = GetWebResult("raw.githubusercontent.com", "/nebelwolfi/BoL/master/Aimbot.version".."?no-cache="..math.random(1,99999999))
+            if sAimbotServerData then
+                iAimbotServerVersion = type(tonumber(sAimbotServerData)) == "number" and tonumber(sAimbotServerData) or nil
+                if iAimbotServerVersion then
+                    if tonumber(iAimbotVersion) < iAimbotServerVersion then
+                        aimbotMsg("New version available v"..iAimbotServerVersion)
+                        aimbotMsg("Updating, please don't press F9")
+                        DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function() 
+                                aimbotMsg("Successfully updated. ("..iAimbotVersion.." => "..iAimbotServerVersion.."), press F9 twice to load the updated version") 
+                            end) 
+                        end, .5)
+                        return
                     end
-                else 
-                    self.data[_Q] = { speed = 1300, delay = 0.15, range = 1150, width = 70, collision = true, aoe = false, type = "linear"}
-                    UPL:AddSpell(_Q, self.data[_Q])
-                end 
-              end
-              local CastPosition, HitChance, Position = UPL:Predict(i, myHero, self.Target)
-              if debugMode then PrintChat("1 - Attempt to aim!") end
-              if HitChance and HitChance >= 3 then
-                  if debugMode then PrintChat("2 - Aimed skill! Precision: "..HitChance) end
-                  self:CCastSpell(i, CastPosition)
-              elseif HitChance and HitChance >= 2 then
-                  if debugMode then PrintChat("2 - Aimed skill! Precision: "..HitChance) end
-                  self:CCastSpell(i, CastPosition)
-              elseif HitChance and HitChance >= 1.5 and self.Config.skConfig[self.str[i]..myHero.charName] >= 1 then
-                  if debugMode then PrintChat("2 - Aimed skill! Precision: "..HitChance) end
-                  self:CCastSpell(i, CastPosition)
-              elseif HitChance and HitChance >= 1 and self.Config.skConfig[self.str[i]..myHero.charName] >= 2 then
-                  if debugMode then PrintChat("2 - Aimed skill! Precision: "..HitChance) end
-                  self:CCastSpell(i, CastPosition)
-              else
-                  local enemies = self:EnemiesAround(self.Target, 250) -- Maybe needs some adjustment
-                  if enemies > 0 then
-                    if debugMode then PrintChat("2 - Checking other enemies around target...") end
-                    self.Target = self:GetNextCustomTarget(i, self.Target)
-                   if ValidTarget(self.Target) then
-                    local CastPosition, HitChance, Position = UPL:Predict(i, myHero, self.Target)
-                    if HitChance and HitChance >= 2 then
-                      if not myHero:CanUseSpell(i) then return end
-                      if debugMode then PrintChat("3 - Aimed skill! Precision: "..HitChance) end
-                      self:CCastSpell(i, CastPosition)
-                    elseif HitChance and HitChance >= 1.5 and self.Config.skConfig[self.str[i]..myHero.charName] >= 1 then
-                      if not myHero:CanUseSpell(i) then return end
-                      if debugMode then PrintChat("3 - Aimed skill! Precision: "..HitChance) end
-                      self:CCastSpell(i, CastPosition)
-                    elseif HitChance and HitChance >= 1 and self.Config.skConfig[self.str[i]..myHero.charName] >= 2 then
-                      if not myHero:CanUseSpell(i) then return end
-                      if debugMode then PrintChat("3 - Aimed skill! Precision: "..HitChance) end
-                      self:CCastSpell(i, CastPosition)
-                    end
-                   end
-                   if myHero:CanUseSpell(i) then
-                    if self.Config.skConfig[self.str[i]..myHero.charName] <= 2 then if debugMode then PrintChat("3 - No better target found - to mouse") end self:CCastSpell(i, mousePos) end
-                   end
-                  else
-                    if self.Config.skConfig[self.str[i]..myHero.charName] <= 2 then if debugMode then PrintChat("2 - To mouse") end self:CCastSpell(i, mousePos) end
-                  end
-              end self.toCast[i] = false
-          end
-      end 
-  end
-end   
-
-function Aimbot:EnemiesAround(Unit, range)
-  local c=0
-  for i=1,heroManager.iCount do hero = heroManager:GetHero(i) if hero.team ~= myHero.team and hero.x and hero.y and hero.z and GetDistance(hero, Unit) < range then c=c+1 end end return c
-end
-
-function Aimbot:Msg(msg, key)
-   if msg == KEY_UP and key == GetKey("Q") and self.toAim[0] and not self.secondCast then
-     self.toCast[0] = false
-     self.secondCast = false
-   elseif msg == KEY_UP and key == GetKey("W") and self.toAim[1] and not self.secondCast then 
-     self.toCast[1] = false
-     self.secondCast = false
-   elseif msg == KEY_UP and key == GetKey("E") and self.toAim[2] and not self.secondCast then 
-     self.toCast[2] = false
-     self.secondCast = false
-   elseif msg == KEY_UP and key == GetKey("R") and self.toAim[3] and not self.secondCast then
-     self.toCast[3] = false
-     self.secondCast = false
-   end
-end
-
-function Aimbot:IsVeigarLuxQ(i)
-  if myHero.charName == 'Lux' then
-    if i == 0 then
-      return true
-    else
-      return false
-    end
-  elseif myHero.charName == 'Veigar' then
-    if i == 0 then
-      return true
-    else
-      return false
-    end 
-  else
-    return false
-  end
-end
-
-function Aimbot:IsChargeable(i)
-  if myHero.charName == 'Varus' then
-    if i == 0 then
-      return true
-    else
-      return false
-    end
-  elseif myHero.charName == 'Vi' then
-    if i == 0 then
-      return true
-    else
-      return false
-    end 
-  elseif myHero.charName == 'Xerath' then
-    if i == 0 then
-      return true
-    else
-      return false
-    end 
-  else
-    return false
-  end
-end
-
-function Aimbot:IsFirstCast()
-    if myHero.charName == 'LeeSin' then
-        if myHero:GetSpellData(_Q).name == 'BlindMonkQOne' then
-            return true
+                end
+            else
+                aimbotMsg("Error downloading version info")
+            end
         else
-            return false
+            aimbotMsg("AUTO_UPDATE is disabled.")
         end
-    elseif myHero.charName == 'Thresh' then
-        if myHero:GetSpellData(_Q).name == 'ThreshQ' then
-            return true
-        else
-            return false
-        end 
-    elseif myHero.charName == 'Jayce' then
-        if myHero:GetSpellData(_Q).name == 'jayceshockblast' then
-            return true
-        else
-            return false
-        end 
-    elseif myHero.charName == 'Nidalee' then
-        if myHero:GetSpellData(_Q).name == 'JavelinToss' then
-            return true
-        else
-            return false
-        end 
-    elseif myHero.charName == 'Lux' then
-        if myHero:GetSpellData(_E).name == 'LuxLightStrikeKugel' then
-            return true
-        else
-            return false
-        end 
-    else 
-        return true
-    end
-end
-
-function Aimbot:IsJayceQ(i)
-  if myHero.charName == 'Jayce' then
-    if i == 0 then
-      return true
-    else
-      return false
-    end
-  else
-    return false
-  end
-end
-
-function Aimbot:Draw()
-    if not self.debugMode or myHero.dead then
-        return
-    end
-    DrawHitBox(myHero, 2, ARGB(255,255,255,255))
-    DrawCircle3D(myHero.x, myHero.y, myHero.z, GetDistance(myHero.minBBox, myHero.pos), 1, ARGB(255,255,255,255), 32)
-    if myHero.hasMovePath and myHero.pathCount >= 2 then
-      local IndexPath = myHero:GetPath(myHero.pathIndex)
-      if IndexPath then
-        DrawLine3D(myHero.x, myHero.y, myHero.z, IndexPath.x, IndexPath.y, IndexPath.z, 1, ARGB(255, 255, 255, 255))
-      end
-      for i=myHero.pathIndex, myHero.pathCount-1 do
-        local Path = myHero:GetPath(i)
-        local Path2 = myHero:GetPath(i+1)
-        DrawLine3D(Path.x, Path.y, Path.z, Path2.x, Path2.y, Path2.z, 1, ARGB(255, 255, 255, 255))
-      end
-    end
-    for i, enemy in ipairs(GetEnemyHeroes()) do
-      DrawCircle3D(enemy.x, enemy.y, enemy.z, GetDistance(myHero.minBBox, myHero.pos), 1, ARGB(255,255,255,255), 32)
-      DrawHitBox(enemy, 2, ARGB(255,255,255,255))
-      if enemy == nil then
-        return
-      end
-      if enemy.hasMovePath and enemy.pathCount >= 2 then
-        local IndexPath = enemy:GetPath(enemy.pathIndex)
-        if IndexPath then
-          DrawLine3D(enemy.x, enemy.y, enemy.z, IndexPath.x, IndexPath.y, IndexPath.z, 1, ARGB(255, 255, 255, 255))
+        if not _G.UPLloaded then
+            if FileExist(LIB_PATH .. "/UPL.lua") then
+                require("UPL")
+                _G.UPL = UPL()
+                _()
+            else 
+                aimbotMsg("Downloading UPL, please don't press F9")
+                DelayAction(function() 
+                    DownloadFile("https://raw.githubusercontent.com/bol/Common/UPL.lua".."?rand="..math.random(1,99999999), LIB_PATH.."UPL.lua", function() 
+                        DelayAction(function()
+                            require("UPL")
+                            _G.UPL = UPL()
+                            _()
+                        end, .5)
+                    end) 
+                end, .5)
+            end
         end
-        for i=enemy.pathIndex, enemy.pathCount-1 do
-          local Path = enemy:GetPath(i)
-          local Path2 = enemy:GetPath(i+1)
-          DrawLine3D(Path.x, Path.y, Path.z, Path2.x, Path2.y, Path2.z, 1, ARGB(255, 255, 255, 255))
+    end)(function() 
+        local mAimbotMenu = scriptConfig("[Aimbot] "..myHero.charName, "Aimbot3")
+        mAimbotMenu:addParam("empty1", " ", SCRIPT_PARAM_INFO, " ")
+        UPL:AddToMenu(mAimbotMenu)
+        for k = 0, 3 do
+            local v = tAimbotSpells[k]
+            if v then
+                UPL:AddSpell(k, v)
+                mAimbotMenu:addParam(tAimbotStrings[k], "Aimassist: " .. tAimbotStrings[k], SCRIPT_PARAM_ONOFF, false)
+            end
         end
-      end
-    end
-end
-
-function Aimbot:CastSpell(i)
-    if self.Config.tog and not self.Config.off and not myHero.dead and self:IsFirstCast() and (not self.requiresSpellName[i] or self.requiresSpellName[i] == myHero:GetSpellData(i).name:lower()) then
-        if not self.toCast[i] and self.toAim[i] and self.Config.skConfig[self.str[i]..myHero.charName] > 0 then
-            self.Target = self:GetCustomTarget(i)
-            if self.Target ~= nil then
-                if self:IsChargeable(i) then
-                    self:CastCharged(i)
-                else
-                    BlockSpell()
-                    self.toCast[i] = true
+        mAimbotMenu:addParam("empty2", " ", SCRIPT_PARAM_INFO, " ")
+        mAimbotMenu:addParam("ofmiceandmen", "Allow casting to mouse", SCRIPT_PARAM_ONOFF, false)
+        mAimbotMenu:addParam("info1", "^ If below hitchance threshold ^", SCRIPT_PARAM_INFO, " ")
+        mAimbotMenu:addParam("empty3", " ", SCRIPT_PARAM_INFO, " ")
+        mAimbotMenu:addParam("onoff", "Activate Aimbot", SCRIPT_PARAM_ONOFF, true)
+        mAimbotMenu:addParam("toggle", "Deactivate Aimbot", SCRIPT_PARAM_ONKEYDOWN, false, string.byte(" "))
+        AddCastSpellCallback(function(i, _, __)
+            if mAimbotMenu.onoff and not mAimbotMenu.toggle then
+                if mAimbotMenu[tAimbotStrings[i]] then
+                    local _ = (function(I)
+                                    local c = 0 
+                                    for i = 0, enemyHeroesCount do 
+                                        local _ = enemyHeroes[i]
+                                        if _ and _.valid and not _.dead and _.visible then
+                                            local dx, dy = (_.x - myHero.x), (_.z - myHero.z)
+                                            local r = tAimbotSpells[I].range + tAimbotSpells[I].width *.5
+                                            if dx*dx + dy*dy < r * r then
+                                                c = c + 1
+                                            end
+                                            local CastPosition, Chance = UPL:Predict(I, myHero, _)
+                                            if CastPosition and Chance > 0 then 
+                                                return CastPosition;
+                                            end;
+                                        end;
+                                    end;
+                                    return not (mAimbotMenu.ofmiceandmen or c == 0)
+                                end)(i)
+                    if _ and _ ~= true then __.x,__.y,__.z=_.x,_.y,_.z; else return not _ or BlockSpell()end
                 end
             end
-        else
-            self.toCast[i] = false
-        end
-    end
-end
-
-function Aimbot:CastCharged(i)
-    self.secondCast = true
-    for j = 0.250, 1.500, 0.250 do
-        DelayAction(function()
-            local v = self.data[i]
-            v.range = v.range + math.min(v.range, i*500)
-            UPL:AddSpell(i, v)
-            local CastPosition, HitChance, Position = UPL:Predict(i, myHero, self.Target)
-            if debugMode then PrintChat("1 - Attempt to aim!") end
-            if HitChance and HitChance >= 3 then
-              if debugMode then PrintChat("2 - Aimed skill! Precision: "..HitChance) end
-              self:CCastSpell(i, CastPosition)
-            elseif HitChance and HitChance >= 2 then
-              if debugMode then PrintChat("2 - Aimed skill! Precision: "..HitChance) end
-              self:CCastSpell(i, CastPosition)
-            elseif HitChance and HitChance >= 1.5 and self.Config.skConfig[self.str[i]..myHero.charName] >= 1 then
-              if debugMode then PrintChat("2 - Aimed skill! Precision: "..HitChance) end
-              self:CCastSpell(i, CastPosition)
-            elseif HitChance and HitChance >= 1 and self.Config.skConfig[self.str[i]..myHero.charName] >= 2 then
-              if debugMode then PrintChat("2 - Aimed skill! Precision: "..HitChance) end
-              self:CCastSpell(i, CastPosition)
-          end
-        end, j)
-    end
-end
-
-function Aimbot:GetCustomTarget(i)
-    if self.toAim[0] then self.QSel:update() end
-    if self.toAim[1] then self.WSel:update() end
-    if self.toAim[2] then self.ESel:update() end
-    if self.toAim[3] then self.RSel:update() end
-    if _G.MMA_Loaded and _G.MMA_Target() and _G.MMA_Target().type == myHero.type then return _G.MMA_Target() end
-    if _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair and _G.AutoCarry.Attack_Crosshair.target and _G.AutoCarry.Attack_Crosshair.target.type == myHero.type then return _G.AutoCarry.Attack_Crosshair.target end
-    if _G.NebelwolfisOrbWalkerLoaded and _G.NebelwolfisOrbWalker:GetTarget() and _G.NebelwolfisOrbWalker:GetTarget().type == myHero.type then return _G.NebelwolfisOrbWalker:GetTarget() end
-    if i == 0 then
-      return self.QSel.target
-    elseif i == 1 then
-      return self.WSel.target
-    elseif i == 2 then
-      return self.ESel.target
-    elseif i == 3 then
-      return self.RSel.target
-    else
-      return nil
-    end
-end
-
-function Aimbot:GetNextCustomTarget(i, tar)
-    local targ = nil
-    for _, unit in pairs(GetEnemyHeroes()) do
-        if targ and targ.valid and unit and unit.valid and unit ~= tar then
-            if GetDistance(unit, mousePos) < GetDistance(targ, mousePos) then
-                targ = unit
-            end
-        else
-            targ = unit
-        end
-    end
-    return targ
-end
-
---[[ Packet Cast Helper ]]--
-function Aimbot:CCastSpell(Spell, Pos)
-  if self:IsChargeable(Spell) and self.secondCast then
-    self.secondCast = false
-    CastSpell2(Spell, D3DXVECTOR3(Pos.x, Pos.y, Pos.z))
-  else
-    CastSpell(Spell, Pos.x, Pos.z)
-  end
-end
+        end)
+    end)
+end)

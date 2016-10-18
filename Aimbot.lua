@@ -12,7 +12,7 @@
 ]]--
 
 --[[ Set this to false if you do not want it to auto update. ]] --
-local AUTO_UPDATE = true
+local AUTO_UPDATE = true;
 
 --[[ Skillshot list start ]]--
 local tAimbotChamps = {

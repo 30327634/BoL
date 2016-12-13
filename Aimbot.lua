@@ -13,7 +13,7 @@
 
 --[[ Set this to false if you do not want it to auto update. ]] --
 local AUTO_UPDATE = true;
-local iAimbotVersion = 3.2;
+local iAimbotVersion = 3.3;
 
 --[[ Skillshot list start ]]--
 local tAimbotChamps = {
@@ -217,7 +217,7 @@ local tAimbotChamps = {
         [_E] = { speed = 1200, delay = 0.250, range = 850, width = 90, collision = true, aoe = false, type = "linear"}
     },
         ["Ryze"] = {
-        [_Q] = { speed = 1700, delay = 0.25, range = 900, width = 50, collision = true, aoe = false, type = "linear"}
+        [_Q] = { speed = 1500, delay = 0.25, range = 1000, width = 55, collision = true, aoe = false, type = "linear"}
     },
         ["Sejuani"] = {
         [_R] = { speed = 1600, delay = 0.250, range = 1200, width = 110, collision = false, aoe = false, type = "linear"}
@@ -374,9 +374,19 @@ AddLoadCallback(function()
         mAimbotMenu:addParam("empty3", " ", SCRIPT_PARAM_INFO, " ");
         mAimbotMenu:addParam("onoff", "Activate Aimbot", SCRIPT_PARAM_ONOFF, true);
         mAimbotMenu:addParam("toggle", "Deactivate Aimbot", SCRIPT_PARAM_ONKEYDOWN, false, string.byte(" "));
+        local casting, iSpell = Vector(), -1;
+        AddTickCallback(function()
+            if casting.x ~= 0 then
+                CastSpell(iSpell, casting.x, casting.y, casting.z)
+            end
+        end)
         AddCastSpellCallback(function(i, _, __)
             if mAimbotMenu.onoff and not mAimbotMenu.toggle then
                 if mAimbotMenu[tAimbotStrings[i]] then
+                    if casting.x ~= 0 and GetDistance(casting, __) < 25 then
+                        casting.x, iSpell = 0, -1;
+                        return;
+                    end;
                     local _ = (function(I)
                                     local c = 0;
                                     for i = 0, enemyHeroesCount do 
@@ -395,8 +405,10 @@ AddLoadCallback(function()
                                     end;
                                     return not (mAimbotMenu.ofmiceandmen or c == 0);
                                 end)(i);
-                    if _ and _ ~= true then 
-                        __.x,__.y,__.z=_.x,_.y,_.z; 
+                    if _ and _ ~= true then
+                        BlockSpell();
+                        iSpell, casting.x, casting.y, casting.z = i, _.x, _.y, _.z;
+                        -- __.x,__.y,__.z=_.x,_.y,_.z; -- why the fuck is this broken?!??
                     else 
                         return not _ or BlockSpell();
                     end;

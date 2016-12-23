@@ -35,7 +35,7 @@ class "UPL"
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 13.373
+		_G.UPLversion = 13.3733
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0
@@ -106,6 +106,16 @@ function UPL:Loaded()
 	self:Msg("Loaded the latest version (v"..UPLversion..")")
 	self:Msg("Detected predictions: "..preds)
 	UPLloaded = true
+	local function LoadPredsPrematurely()
+		if GetGameTimer() > 30 then
+			pcall(function()
+				self:Predict(0, myHero, myHero)
+			end)
+		else
+			DelayAction(LoadPredsPrematurely, 1)
+		end
+	end
+	DelayAction(LoadPredsPrematurely, 1)
 end
 
 function UPL:Msg(msg)

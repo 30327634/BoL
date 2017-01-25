@@ -35,7 +35,7 @@ class "UPL"
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 13.3733
+		_G.UPLversion = 13.37333
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0
@@ -245,6 +245,12 @@ end
 
 function UPL:AddSpell(slot, spellData)
 	self.spellData[slot] = spellData
+	self.Spells.FH[slot] = nil -- issue recache
+	self.Spells.KP[slot] = nil
+	self.Spells.HP[slot] = nil
+	self.Spells.DP[slot] = nil
+	self.Spells.VP[slot] = nil
+	self.Spells.SP[slot] = nil
 	DelayAction(function() self:AddSpellToMenu(slot) end, 1)
 end
 

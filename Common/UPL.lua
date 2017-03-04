@@ -35,7 +35,7 @@ class "UPL"
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 13.37333
+		_G.UPLversion = 13.37337
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0
@@ -58,7 +58,8 @@ function UPL:__init()
 			{"HP", "HPrediction", function() return FileExist(LIB_PATH .. "HPrediction.lua") end, 1.05, 0, 3, 2},
 			{"DP", "DivinePred", function() return FileExist(LIB_PATH .. "DivinePred.lua") and FileExist(LIB_PATH .. "DivinePred.luac") end, 50, 0, 100, 0},
 			{"VP", "VPrediction", function() return FileExist(LIB_PATH .. "VPrediction.lua") end, 2, 1, 3, 0},
-			{"SP", "SPrediction", function() return FileExist(LIB_PATH .. "SPrediction.lua") end, 1, 1, 3, 0}
+			{"SP", "SPrediction", function() return FileExist(LIB_PATH .. "SPrediction.lua") end, 1, 1, 3, 0},
+			{"TP", "TRPrediction", function() return FileExist(LIB_PATH .. "TRPrediction.lua") end, 1, 0, 2.5, 1}
 		}
 		for i=1, #possiblePredictions do
 			local pPred = possiblePredictions[i]
@@ -208,6 +209,11 @@ function UPL:GetVPSpell(data)
 	return data
 end
 
+function UPL:GetTPSpell(data)
+	require "TRPrediction"
+	return data
+end
+
 function UPL:GetSPSpell(data)
 	require "SPrediction"
 	return data
@@ -245,13 +251,13 @@ end
 
 function UPL:AddSpell(slot, spellData)
 	self.spellData[slot] = spellData
-	self.Spells.FH[slot] = nil -- issue recache
-	self.Spells.KP[slot] = nil
-	self.Spells.HP[slot] = nil
-	self.Spells.DP[slot] = nil
-	self.Spells.VP[slot] = nil
-	self.Spells.SP[slot] = nil
 	DelayAction(function() self:AddSpellToMenu(slot) end, 1)
+end
+
+function UPL:ModSpell(slot, spellData)
+	for i, v in pairs(spellData) do
+		self.spellData[slot][i] = spellData[i]
+	end
 end
 
 function UPL:AddSpellToMenu(slot)
@@ -391,6 +397,15 @@ function UPL:VPPredict(spell, source, target)
 	end
 end
 
+function UPL:TPPredict(spell, source, target)
+	if not self.Spells.TP[spell] then
+		self.Spells.TP[spell] = self["GetTPSpell"](self, self.spellData[spell])
+	end
+	local spell = self.Spells.TP[spell]
+	local pos, hc = TRPrediction:GetCastPosition(spell.delay, spell.speed, spell.width, spell.range, target, source)
+	return pos, TRPrediction:IsCollision(spell.delay, spell.speed, spell.width, spell.range, source, pos) and 0 or hc
+end
+
 function UPL:SPPredict(spell, source, target)
 	if not self.Spells.SP[spell] then
 		self.Spells.SP[spell] = self["GetSPSpell"](self, self.spellData[spell])
@@ -408,5 +423,5 @@ function UPL:Predict(slot, source, target)
 	local aPred = self.predTable[self.Config[slotString.."Prediction"]][1]
 	local a, b, c = self[aPred.."Predict"](self, slot, source, target)
 	-- print(slotString, ", ", b) hue
-	return a, a and b and b >= self.Config[slotString.."HitChance"] and b or -1, c
+	return a, (a and b) and b >= self.Config[slotString.."HitChance"] and b or -1, c
 end

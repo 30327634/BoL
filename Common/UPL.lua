@@ -35,7 +35,7 @@ class "UPL"
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 13.37337
+		_G.UPLversion = 13.373373
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0
@@ -52,6 +52,7 @@ function UPL:__init()
 		self.spellData = {
 			{},{},{},[0]={}
 		}
+		self.Modified = {}
 		local possiblePredictions = {
 			{"FH", "FHPrediction", function() return FHPrediction ~= nil or FileExist(LIB_PATH .. "FHPrediction.lua") end, 1.1, 1, 2, 2},
 			{"KP", "KPrediction", function() return FileExist(LIB_PATH .. "KPrediction.lua") end, 1.75, 0, 3, 2},
@@ -257,6 +258,7 @@ end
 function UPL:ModSpell(slot, spellData)
 	for i, v in pairs(spellData) do
 		self.spellData[slot][i] = spellData[i]
+		self.Modified[slot] = true
 	end
 end
 
@@ -324,7 +326,7 @@ end
 
 function UPL:FHPredict(spell, source, target)
 	if not FHPrediction and FileExist(LIB_PATH .. "FHPrediction.lua") then require("FHPrediction") end
-	if not self.Spells.FH[spell] then
+	if not self.Spells.FH[spell] or self.Modified[spell] then
 		self.Spells.FH[spell] = self["GetFHSpell"](self, self.spellData[spell])
 	end
 	local spellString = self.slotToString[spell]
@@ -335,7 +337,7 @@ function UPL:FHPredict(spell, source, target)
 end
 
 function UPL:KPPredict(spell, source, target)
-	if not self.Spells.KP[spell] then
+	if not self.Spells.KP[spell] or self.Modified[spell] then
 		self.Spells.KP[spell] = self["GetKPSpell"](self, self.spellData[spell])
 	end
 	if not KP then KP = KPrediction() end
@@ -346,7 +348,7 @@ function UPL:KPPredict(spell, source, target)
 end
 
 function UPL:HPPredict(spell, source, target)
-	if not self.Spells.HP[spell] then
+	if not self.Spells.HP[spell] or self.Modified[spell] then
 		self.Spells.HP[spell] = self["GetHPSpell"](self, self.spellData[spell])
 	end
 	if not HP then HP = HPrediction() end
@@ -371,7 +373,7 @@ function UPL:DPPredict(spell, source, target)
 end
 
 function UPL:VPPredict(spell, source, target)
-	if not self.Spells.VP[spell] then
+	if not self.Spells.VP[spell] or self.Modified[spell] then
 		self.Spells.VP[spell] = self["GetVPSpell"](self, self.spellData[spell])
 	end
 	if not VP then VP = VPrediction() end
@@ -398,7 +400,7 @@ function UPL:VPPredict(spell, source, target)
 end
 
 function UPL:TPPredict(spell, source, target)
-	if not self.Spells.TP[spell] then
+	if not self.Spells.TP[spell] or self.Modified[spell] then
 		self.Spells.TP[spell] = self["GetTPSpell"](self, self.spellData[spell])
 	end
 	local spell = self.Spells.TP[spell]
@@ -407,7 +409,7 @@ function UPL:TPPredict(spell, source, target)
 end
 
 function UPL:SPPredict(spell, source, target)
-	if not self.Spells.SP[spell] then
+	if not self.Spells.SP[spell] or self.Modified[spell] then
 		self.Spells.SP[spell] = self["GetSPSpell"](self, self.spellData[spell])
 	end
 	if not SP then SP = SPrediction() end

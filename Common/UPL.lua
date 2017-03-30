@@ -35,7 +35,7 @@ class "UPL"
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 133.7
+		_G.UPLversion = 9000.1
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0
@@ -410,7 +410,9 @@ function UPL:TPPredict(spell, source, target)
 	end
 	local spell = self.Spells.TP[spell]
 	local pos, hc, rcoll = TRPrediction:GetPrediction(spell, target, source)
-	return pos, (rcoll and rcoll < coll) and 0 or hc
+	if not pos then return pos, -1 end
+	local rcoll, rcollc = TRPrediction:IsCollision(spell, target, source, pos)
+	return pos, (rcoll and rcollc > coll) and -1 or hc
 end
 
 function UPL:SPPredict(spell, source, target)
@@ -430,5 +432,5 @@ function UPL:Predict(slot, source, target)
 	local aPred = self.predTable[self.Config[slotString.."Prediction"]][1]
 	local a, b, c = self[aPred.."Predict"](self, slot, source, target)
 	-- print(slotString, ", ", b) hue
-	return a, (a and b) and b >= self.Config[slotString.."HitChance"] and b or -1, c
+	return a, (a and b and b >= self.Config[slotString.."HitChance"]) and b or -1, c
 end

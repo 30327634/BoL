@@ -35,7 +35,7 @@ class "UPL"
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 13.373373
+		_G.UPLversion = 133.7
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0
@@ -47,7 +47,8 @@ function UPL:__init()
 			HP={},
 			DP={},
 			VP={},
-			SP={}
+			SP={},
+			TP={}
 		}
 		self.spellData = {
 			{},{},{},[0]={}
@@ -212,7 +213,7 @@ end
 
 function UPL:GetTPSpell(data)
 	require "TRPrediction"
-	return data
+	return TR_BindSS({type = ({["linear"] = 'IsLinear', ["circular"] = "IsRadial", ["cone"] = "IsConic"})[data.type], delay = data.delay, range = data.range, width = data.width, radius = data.width * .5, angle = data.angle, speed = data.speed})
 end
 
 function UPL:GetSPSpell(data)
@@ -400,12 +401,16 @@ function UPL:VPPredict(spell, source, target)
 end
 
 function UPL:TPPredict(spell, source, target)
+	local coll = (myHero.charName == "Lux" or myHero.charName == "Veigar") and 1 or self.spellData[spell].collision
+	if type(coll) == "boolean" then
+		coll = coll and 0 or math.huge
+	end
 	if not self.Spells.TP[spell] or self.Modified[spell] then
 		self.Spells.TP[spell] = self["GetTPSpell"](self, self.spellData[spell])
 	end
 	local spell = self.Spells.TP[spell]
-	local pos, hc = TRPrediction:GetCastPosition(spell.delay, spell.speed, spell.width, spell.range, target, source)
-	return pos, TRPrediction:IsCollision(spell.delay, spell.speed, spell.width, spell.range, source, pos) and 0 or hc
+	local pos, hc, rcoll = TRPrediction:GetPrediction(spell, target, source)
+	return pos, (rcoll and rcoll < coll) and 0 or hc
 end
 
 function UPL:SPPredict(spell, source, target)

@@ -13,7 +13,7 @@
 
 --[[ Set this to false if you do not want it to auto update. ]] --
 local AUTO_UPDATE = true;
-local iAimbotVersion = 3.3;
+local iAimbotVersion = 3.4;
 
 --[[ Skillshot list start ]]--
 local tAimbotChamps = {
@@ -376,14 +376,14 @@ AddLoadCallback(function()
         mAimbotMenu:addParam("toggle", "Deactivate Aimbot", SCRIPT_PARAM_ONKEYDOWN, false, string.byte(" "));
         local casting, iSpell = Vector(), -1;
         AddTickCallback(function()
-            if casting.x ~= 0 and myHero:CanUseSpell(iSpell) == 0 then
-                CastSpell(iSpell, casting.x, casting.y, casting.z)
+            if iSpell > -1 and casting.x ~= 0 then
+                CastSpellEx(iSpell, casting.x, casting.y, casting.z)
             end
         end)
         AddCastSpellCallback(function(i, _, __)
             if mAimbotMenu.onoff and not mAimbotMenu.toggle then
                 if mAimbotMenu[tAimbotStrings[i]] and myHero:CanUseSpell(i) == 0 then
-                    if casting.x ~= 0 and GetDistance(casting, __) < 25 then
+                    if iSpell > -1 and casting.x ~= 0 and GetDistance(casting, __) < 25 then
                         casting.x, iSpell = 0, -1;
                         return;
                     end;

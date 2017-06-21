@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.494
+ScriptologyVersion       = 2.495
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = false
 ScriptologyLoadAwareness = false
@@ -7,11 +7,12 @@ ScriptologyLoadEvade     = false
 ScriptologyAutoUpdate    = false
 ScriptologyConfig        = scriptConfig("Scriptology Loader", "Scriptology")
 _Q, _W, _E, _R  = 0, 1, 2, 3
-local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, acos = math.min, math.max, math.cos, math.sin, math.pi, math.huge, math.ceil, math.floor, math.round, math.random, math.abs, math.deg, math.asin, math.acos
+local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, acos, __enemyHeroList = math.min, math.max, math.cos, math.sin, math.pi, math.huge, math.ceil, math.floor, math.round, math.random, math.abs, math.deg, math.asin, math.acos, {}
 -- { Load
 
   function OnLoad()
     Update()
+    LoadEnemyHeroes()
     LoadSpellData()
     if ScriptologyLoadActivator and SActivatorVersion == nil then LoadActivator() end
     if ScriptologyLoadAwareness then LoadAwareness() end
@@ -87,6 +88,47 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
     function UnloadAwareness()
       Msg("Plugin: 'Awareness' un-ticked. Press 2x F9 to unload.")
+    end
+
+  -- }
+
+  -- { Enemy Heroes (ty bol)
+
+    function LoadEnemyHeroes()
+      local count = 0
+      for i = 1, heroManager.iCount do
+        local hero = heroManager:GetHero(i)
+        if hero.team ~= player.team then
+          count = count + 1
+          __enemyHeroList[count] = hero
+        end
+      end
+      local AddToEnemyHeroes = 
+        function(unit)
+          count = count + 1
+          _enemyHeroes[count] = unit
+        end
+      local RemoveFromEnemyHeroes = 
+        function(networkID)
+          for i = 1, count do
+            local hero = _enemyHeroes[i]
+            if hero and hero.networkID == networkID then
+              table.remove(_enemyHeroes, i)
+              count = count - 1
+              break;
+            end
+          end
+        end
+      AddCreateObjCallback(function(o)
+        if o and o.valid and o.type == myHero.type and o.team ~= myHero.team then
+          AddToEnemyHeroes(o)
+        end
+      end)
+      AddDeleteObjCallback(function(o)
+        if o and o.valid and o.type == myHero.type then
+          AddToEnemyHeroes(o.networkID)
+        end
+      end)
     end
 
   -- }
@@ -398,11 +440,11 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
         buffToTrackForStacks = buffStackTrackList[myHero.charName]
       end
       killTable = {}
-      for i, enemy in pairs(GetEnemyHeroes()) do
+      for i, enemy in pairs(__enemyHeroList) do
         killTable[enemy.networkID] = {0, 0, 0, 0, 0, 0}
       end
       killDrawTable = {}
-      for i, enemy in pairs(GetEnemyHeroes()) do
+      for i, enemy in pairs(__enemyHeroList) do
         killDrawTable[enemy.networkID] = {}
       end
       colors = { 0xDFFFE258, 0xDF8866F4, 0xDF55F855, 0xDFFF5858 }
@@ -741,7 +783,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     if msg == WM_LBUTTONDOWN then
       local minD = 0
       local starget = nil
-      for i, enemy in ipairs(GetEnemyHeroes()) do
+      for i, enemy in ipairs(__enemyHeroList) do
         if ValidTarget(enemy) then
           if GetDistance(enemy, mousePos) <= minD or starget == nil then
             minD = GetDistance(enemy, mousePos)
@@ -775,7 +817,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
   function Draw()
     DrawRange()
-    for _, hero in pairs(GetEnemyHeroes()) do
+    for _, hero in pairs(__enemyHeroList) do
       DrawDmgOnHpBar(hero)
     end
     DrawForcetarget()
@@ -898,7 +940,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
   function CalculateDamage()
     if not Config.Draws.DMG then return end
-    for i, enemy in pairs(GetEnemyHeroes()) do
+    for i, enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local damageQ = myHero:CanUseSpell(_Q) ~= READY and 0 or myHero.charName == "Kalista" and 0 or GetDmg(_Q, myHero, enemy) or 0
         local damageW = myHero:CanUseSpell(_W) ~= READY and 0 or GetDmg(_W, myHero, enemy) or 0
@@ -911,7 +953,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
   function CalculateDamageOffsets()
     if not Config.Draws.DMG then return end
-    for i, enemy in pairs(GetEnemyHeroes()) do
+    for i, enemy in pairs(__enemyHeroList) do
     	if enemy and enemy.valid then
 	      local nextOffset = 0
 	      local barPos = GetUnitHPBarPos(enemy)
@@ -1327,14 +1369,14 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
         end
       end
     end
-    local enemies = #GetEnemyHeroes()
+    local enemies = #__enemyHeroList
     if priorityTable2~=nil and type(priorityTable2) == "table" and enemies > 0 then
-      for i, enemy in ipairs(GetEnemyHeroes()) do
-        _SetPriority(priorityTable2.p1, enemy, min(1, #GetEnemyHeroes()))
-        _SetPriority(priorityTable2.p2, enemy, min(2, #GetEnemyHeroes()))
-        _SetPriority(priorityTable2.p3,  enemy, min(3, #GetEnemyHeroes()))
-        _SetPriority(priorityTable2.p4,  enemy, min(4, #GetEnemyHeroes()))
-        _SetPriority(priorityTable2.p5,  enemy, min(5, #GetEnemyHeroes()))
+      for i, enemy in ipairs(__enemyHeroList) do
+        _SetPriority(priorityTable2.p1, enemy, min(1, #__enemyHeroList))
+        _SetPriority(priorityTable2.p2, enemy, min(2, #__enemyHeroList))
+        _SetPriority(priorityTable2.p3,  enemy, min(3, #__enemyHeroList))
+        _SetPriority(priorityTable2.p4,  enemy, min(4, #__enemyHeroList))
+        _SetPriority(priorityTable2.p5,  enemy, min(5, #__enemyHeroList))
       end
     end
   end
@@ -1373,7 +1415,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   function GetClosestEnemy(pos)
     local enemy = nil
     pos = pos or myHero
-    for v,k in pairs(GetEnemyHeroes()) do
+    for v,k in pairs(__enemyHeroList) do
       if not enemy then enemy = k end
       if GetDistanceSqr(k, pos) < GetDistanceSqr(enemy, pos) then
         enemy = k
@@ -1406,7 +1448,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     GapcloseTargeted = targeted
     GapcloseRange = range
     config:addDynamicParam("antigap", "Auto "..str[spell].." on gapclose", SCRIPT_PARAM_ONOFF, true)
-    for _,k in pairs(GetEnemyHeroes()) do
+    for _,k in pairs(__enemyHeroList) do
       if gapcloserTable[k.charName] then
         config:addParam(k.charName, "Use "..str[spell].." on "..k.charName.." "..(type(gapcloserTable[k.charName]) == 'number' and str[gapcloserTable[k.charName]] or (k.charName == "LeeSin" and "Q" or "E")), SCRIPT_PARAM_ONOFF, true)
       end
@@ -1981,7 +2023,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Ahri:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local ultPos = Vector(enemy.x, enemy.y, enemy.z) - ( Vector(enemy.x, enemy.y, enemy.z) - Vector(myHero.x, myHero.y, myHero.z)):perpendicular():normalized() * 350
         local health = GetRealHealth(enemy)
@@ -2072,7 +2114,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
   function Ashe:Tick()
     if Config.Misc.AimR then
-      for _,k in pairs(GetEnemyHeroes()) do
+      for _,k in pairs(__enemyHeroList) do
         if not k.dead and GetDistance(k,mousePos) < 250 then
           Cast(_R, k)
         end
@@ -2123,7 +2165,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
       end
     end
     if Config.Combo.W then
-      for k,enemy in pairs(GetEnemyHeroes()) do
+      for k,enemy in pairs(__enemyHeroList) do
         if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
           if GetDistanceSqr(enemy) < myHeroSpellData[1].range^2 then
             Cast(_W, enemy)
@@ -2143,7 +2185,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
       end
     end
     if Config.Harass.W and Config.Harass.manaW <= 100*myHero.mana/myHero.maxMana then
-      for k,enemy in pairs(GetEnemyHeroes()) do
+      for k,enemy in pairs(__enemyHeroList) do
         if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
           if GetDistanceSqr(enemy) < myHeroSpellData[1].range^2 then
             Cast(_W, enemy)
@@ -2154,7 +2196,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Ashe:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         if sReady[_Q] and self:QReady() and GetRealHealth(enemy) < GetDmg(_Q, myHero, enemy) and Config.Killsteal.Q and GetDistanceSqr(enemy) < myHeroSpellData[0].range^2 then
           CastSpell(_Q, myHero:Attack(enemy))
@@ -2622,7 +2664,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Azir:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if ValidTarget(enemy) and enemy ~= nil and not enemy.dead then
         if self:CountSoldiers(enemy)*GetDmg(_W,myHero,enemy) > GetRealHealth(enemy) and Config.Killsteal.W and GetDistance(enemy) < myHeroSpellData[1].range+350 then 
           myHero:Attack(enemy)
@@ -2672,7 +2714,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     Config.Draws:addParam("Qhc", "Draw Q HitChance", SCRIPT_PARAM_ONOFF, true)
     Config.Misc:addParam("UrfW", "Use Perma-W (URF Mode)", SCRIPT_PARAM_ONOFF, false)
     if Smite ~= nil then Config.Misc:addParam("S", "Smitegrab", SCRIPT_PARAM_ONOFF, true) end
-    for _, enemy in pairs(GetEnemyHeroes()) do
+    for _, enemy in pairs(__enemyHeroList) do
       Config.Misc:addParam("dont"..enemy.charName, "Don't Grab "..enemy.charName, SCRIPT_PARAM_ONOFF, false)
     end
     AddGapcloseCallback(_Q, myHeroSpellData[0].range, false, Config.Misc)
@@ -2693,7 +2735,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
       else
         DrawText("Active Prediction: "..predictionStringTable[activeMode.predQ], 25, WINDOW_W/8, WINDOW_H/4+75, ARGB(255, 255, 255, 255))
       end
-      for _, enemy in pairs(GetEnemyHeroes()) do
+      for _, enemy in pairs(__enemyHeroList) do
         if enemy and not enemy.dead and enemy.visible and enemy.bTargetable and GetDistanceSqr(enemy) < (myHeroSpellData[_Q].range+250)^2 then
           local CastPosition, HitChance, HeroPosition = Predict(_Q, myHero, enemy, activeMode)
           if CastPosition then
@@ -2749,7 +2791,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Blitzcrank:GrabSomeone()
-    for _, enemy in pairs(GetEnemyHeroes()) do
+    for _, enemy in pairs(__enemyHeroList) do
       if enemy and enemy.valid  and not enemy.dead and enemy.visible and enemy.bTargetable and not Config.Misc["dont"..enemy.charName] and GetDistanceSqr(enemy) < myHeroSpellData[_Q].range^2 then
         Cast(_Q, enemy)
         self.countPullNow = os.clock()
@@ -2789,7 +2831,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Blitzcrank:Killsteal()
-    for _, enemy in pairs(GetEnemyHeroes()) do
+    for _, enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local health = GetRealHealth(enemy)
         if sReady[_Q] and Config.Killsteal.Q and health < GetDmg(_Q, myHero, enemy) and GetDistanceSqr(Target) <= myHeroSpellData[_Q].range^2 then
@@ -2975,7 +3017,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Brand:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if ValidTarget(enemy) and enemy ~= nil and not enemy.dead then
         if myHero:CanUseSpell(_Q) == READY and GetRealHealth(enemy) < GetDmg(_Q, myHero, enemy) and Config.Killsteal.Q and ValidTarget(enemy, myHeroSpellData[0].range) then
           Cast(_Q, enemy)
@@ -3110,7 +3152,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
         Cast(_W, Target)
       end
     end
-    if Config.Combo.R and (GetDmg(_R, myHero, Target) + 2*GetDmg(_E, myHero, Target) >= GetRealHealth(Target) or (EnemiesAround(Target, 350) > 1 and UnitHaveBuff(Target, "poison"))) and GetDistance(Target) < myHeroSpellData[3].range then
+    if Config.Combo.R and (GetDmg(_R, myHero, Target) + 2*GetDmg(_E, myHero, Target) >= GetRealHealth(Target) or (EnemiesAround(Target, 350) > 1 and self:HasPoisonousDebuff(Target))) and GetDistance(Target) < myHeroSpellData[3].range then
       Cast(_R, Target)
     end
   end
@@ -3131,7 +3173,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Cassiopeia:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local health = GetRealHealth(enemy)
         if sReady[_Q] and health < GetDmg(_Q, myHero, enemy) and Config.Killsteal.Q and GetDistance(enemy) < myHeroSpellData[0].range then
@@ -3213,7 +3255,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Darius:Combo()
-    for _, enemy in pairs(GetEnemyHeroes()) do
+    for _, enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local CastPosition, HitChance, Position = Predict(_Q, myHero, enemy, ScriptologyConfig.Prediction["Combo"])
         if Config.Combo.Qd and HitChance and sReady[_Q] and CastPosition and GetDistance(CastPosition) >= 250 and HitChance >= ScriptologyConfig.Prediction["Combo"]["pred"..str[_Q].."val"] then
@@ -3233,7 +3275,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
   function Darius:Harass()
     if sReady[_Q] and Config.Harass.manaQ < myHero.mana/myHero.maxMana*100 then
-      for _, enemy in pairs(GetEnemyHeroes()) do
+      for _, enemy in pairs(__enemyHeroList) do
         if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
           local CastPosition, HitChance, Position = Predict(_Q, myHero, enemy, ScriptologyConfig.Prediction["Harass"])
           if Config.Harass.Qd and sReady[_Q] and CastPosition and GetDistance(CastPosition) >= 250 and HitChance >= ScriptologyConfig.Prediction["Harass"]["pred"..str[_Q].."val"] then
@@ -3271,7 +3313,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Darius:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local qDmg = ((GetDmg(_Q, myHero, enemy)*1.5) or 0) 
         local q1Dmg = ((GetDmg(_Q, myHero, enemy)) or 0)  
@@ -3369,7 +3411,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
       if GetDistance(Target,myHero) < 790+Target.boundingRadius and GetDistance(Target,myHero) > 825-Target.boundingRadius then
         local target, cPos, CastPosition, HitChance, Position
         local LessToKill, LessToKilli = 100, 0
-        for _,enemy in pairs(GetEnemyHeroes()) do
+        for _,enemy in pairs(__enemyHeroList) do
           if ValidTarget(enemy) and GetDistance(enemy, Target) < myHeroSpellData[0].range and enemy ~= Target then
           DamageToHero = GetDmg(_Q, myHero, enemy)
           ToKill = GetRealHealth(enemy) / DamageToHero
@@ -3455,7 +3497,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Diana:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local health = GetRealHealth(enemy)
         if sReady[_Q] and health < GetDmg(_Q, myHero, enemy) and Config.Killsteal.Q and GetDistanceSqr(enemy) < myHeroSpellData[0].range^2 then
@@ -3758,7 +3800,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Ekko:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local health = GetRealHealth(enemy)
         if sReady[_Q] and health < GetDmg(_Q, myHero, enemy) and Config.Killsteal.Q and GetDistanceSqr(enemy) < (myHeroSpellData[0].range)^2 then
@@ -4032,7 +4074,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Kalista:Killsteal()
-    for _, enemy in pairs(GetEnemyHeroes()) do
+    for _, enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.valid then
         local health = GetRealHealth(enemy)
         if Config.Killsteal.E and health <= GetDmg(_E, myHero, enemy) and GetDistanceSqr(enemy) < 1000*1000 then
@@ -4241,7 +4283,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Katarina:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and GetDistanceSqr(enemy) < 700^2 then
         local dist = GetDistance(enemy)
         local health = GetRealHealth(enemy)
@@ -4449,7 +4491,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
       Cast(_Q, Target)
     end
     if Config.Combo.Rkill then
-      for _, unit in pairs(GetEnemyHeroes()) do
+      for _, unit in pairs(__enemyHeroList) do
         if ValidTarget(unit, 1050) then
           local dmg = (sReady[_Q] and GetDmg(_Q, myHero, unit) or 0) + (sReady[_W] and GetDmg(_W, myHero, unit) or 0) + (sReady[_E] and GetDmg(_E, myHero, unit) or 0)
           if GetRealHealth(unit) < dmg then
@@ -4509,7 +4551,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Kassadin:Killsteal()
-    for _, enemy in pairs(GetEnemyHeroes()) do
+    for _, enemy in pairs(__enemyHeroList) do
       if ValidTarget(enemy) then
         local hp = GetRealHealth(enemy)
         local dist = GetDistance(enemy)
@@ -4660,7 +4702,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function KogMaw:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if ValidTarget(enemy) and enemy ~= nil and not enemy.dead then
         if myHero:CanUseSpell(_Q) == READY and GetRealHealth(enemy) < GetDmg(_Q, myHero, enemy) and Config.Killsteal.Q and ValidTarget(enemy, myHeroSpellData[0].range) then
           Cast(_Q, enemy)
@@ -4745,7 +4787,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   function LeeSin:Tick()
     if Config.Misc.Insec then
       if sReady[_R] then
-        for _, enemy in pairs(GetEnemyHeroes()) do
+        for _, enemy in pairs(__enemyHeroList) do
           if enemy and not enemy.dead and enemy.visible and GetDistanceSqr(enemy) < 475*475 then
             CastSpell(_R, enemy)
             return;
@@ -4916,7 +4958,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function LeeSin:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local health = GetRealHealth(enemy)
         if sReady[_Q] and health < GetDmg(_Q, myHero, enemy) and Config.Killsteal.Q and GetDistanceSqr(enemy) < myHeroSpellData[0].range^2 then
@@ -4979,7 +5021,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     Config.Misc:addParam("Ea", "Detonate E (auto)", SCRIPT_PARAM_ONOFF, true)
     DelayAction(function()
       Config.Misc:addParam("Wa", "Shield with W (auto)", SCRIPT_PARAM_ONOFF, true)
-      for _,k in pairs(GetEnemyHeroes()) do
+      for _,k in pairs(__enemyHeroList) do
         Config.Misc:addParam(k.charName, k.charName, SCRIPT_PARAM_INFO, "")
         for i=0,3 do
           if spellData and spellData[k.charName] and spellData[k.charName][i] and spellData[k.charName][i].name and spellData[k.charName][i].name ~= "" then
@@ -5091,7 +5133,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Lux:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local health = GetRealHealth(enemy)
         if sReady[_Q] and health < GetDmg(_Q, myHero, enemy) and Config.Killsteal.Q and GetDistance(enemy) < myHeroSpellData[0].range then
@@ -5182,6 +5224,12 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     end
   end
 
+  function Malzahar:CastSpell(slot)
+    if slot == _R and myHero:CanUseSpell(_R) == 0 then
+      DisableOrbwalker()
+    end
+  end
+
   function Malzahar:LastHit()
     if ultOn > os.clock() then return end
     if myHero:CanUseSpell(_Q) == READY and ((Config.kConfig.LastHit and Config.LastHit.Q and Config.LastHit.manaQ <= 100*myHero.mana/myHero.maxMana) or (Config.kConfig.LaneClear and Config.LaneClear.Q and Config.LaneClear.manaQ <= 100*myHero.mana/myHero.maxMana)) then
@@ -5263,7 +5311,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Malzahar:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if ValidTarget(enemy) and enemy ~= nil and not enemy.dead then
         if myHero:CanUseSpell(_Q) == READY and GetRealHealth(enemy) < GetDmg(_Q, myHero, enemy) and Config.Killsteal.Q and ValidTarget(enemy, myHeroSpellData[0].range) then
           Cast(_Q, enemy)
@@ -5518,7 +5566,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
   function Nidalee:CalculateDamage()
     if not Config.Draws.DMG then return end
-    for i, enemy in pairs(GetEnemyHeroes()) do
+    for i, enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         self:GetRWEQComboDmg(enemy, 0, true)
       end
@@ -5672,7 +5720,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Nidalee:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local health = GetRealHealth(enemy)
         if sReady[_Q] and self:IsHuman() and health < self:GetDmg(_Q, enemy, true)+self:GetDmg("Ludens", enemy) and Config.Killsteal.Q and ValidTarget(enemy, self.data.Human[0].range) then
@@ -5768,8 +5816,8 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     Config.kConfig:addDynamicParam("LastHit", "Last hit", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
     Config.kConfig:addDynamicParam("LaneClear", "Lane Clear", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
     Config.Misc:addDynamicParam("Ra", "Auto R", SCRIPT_PARAM_ONOFF, true)
-    Config.Misc:addParam("Re", "Enemies around ball to R", SCRIPT_PARAM_SLICE, ceil(#GetEnemyHeroes()/2), 0, #GetEnemyHeroes()+1, 0)
-    DelayAction(function() if #GetEnemyHeroes() == 1 then Config.Misc.Re = 2 else Config.Misc.Re = ceil(#GetEnemyHeroes()/2) end end, 1)
+    Config.Misc:addParam("Re", "Enemies around ball to R", SCRIPT_PARAM_SLICE, ceil(#__enemyHeroList/2), 0, #__enemyHeroList+1, 0)
+    DelayAction(function() if #__enemyHeroList == 1 then Config.Misc.Re = 2 else Config.Misc.Re = ceil(#__enemyHeroList/2) end end, 1)
   end
 
   function Orianna:Tick()
@@ -5938,7 +5986,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Orianna:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local Ball = self.Ball or myHero
         local health = GetRealHealth(enemy)
@@ -6244,7 +6292,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Rengar:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local health = GetRealHealth(enemy)
         if sReady[_Q] and health < GetDmg(_Q, myHero, enemy) and Config.Killsteal.Q and GetDistanceSqr(enemy) < (myHero.range+GetDistance(myHero.minBBox))^2 then
@@ -6580,7 +6628,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
   function Riven:CalculateDamage()
     if not Config.Draws.DMG then return end
-    for i, enemy in pairs(GetEnemyHeroes()) do
+    for i, enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
       self:CalcComboDmg(enemy, 0, (Config.Combo.Rm == 1), false, true)
       end
@@ -6778,7 +6826,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Rumble:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if ValidTarget(enemy) and enemy ~= nil and not enemy.dead then
         if myHero:CanUseSpell(_Q) == READY and GetRealHealth(enemy) < GetDmg(_Q, myHero, enemy) and Config.Killsteal.Q and ValidTarget(enemy, myHeroSpellData[0].range) then
           Cast(_Q, enemy)
@@ -6842,7 +6890,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Ryze:Combo()
-    for _, enemy in pairs(GetEnemyHeroes()) do
+    for _, enemy in pairs(__enemyHeroList) do
       if ValidTarget(enemy, 900) then
         if sReady[_Q] and Config.Combo.Q and GetDistanceSqr(enemy) < myHeroSpellData[_Q].range^2 then
           Cast(_Q, enemy.pos)
@@ -6987,7 +7035,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Syndra:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         if GetDmg(_Q, myHero, enemy) > enemy.health and GetDistance(enemy) < 1000 then
           Cast(_Q, enemy)
@@ -7092,7 +7140,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Talon:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local dmg = 0
         local c = 0
@@ -7219,7 +7267,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Teemo:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local health = GetRealHealth(enemy)
         local qdmg = GetDmg(_Q, myHero, enemy)
@@ -7267,7 +7315,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Thresh:Combo()
-    for i, target in pairs(GetEnemyHeroes()) do
+    for i, target in pairs(__enemyHeroList) do
       if target and myHero:CanUseSpell(_E) == READY and Config.Combo.E and GetDistance(target,myHero) < myHeroSpellData[2].range then
         local flayTowards = nil
         if #GetAllyHeroes() > 0 then
@@ -7295,7 +7343,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Thresh:Harass()
-    for i, target in pairs(GetEnemyHeroes()) do
+    for i, target in pairs(__enemyHeroList) do
       if target and myHero:CanUseSpell(_E) == READY and Config.Harass.E and Config.Harass.manaE <= 100*myHero.mana/myHero.maxMana and GetDistance(target,myHero) < myHeroSpellData[2].range then
         Cast(_E, target)
       end
@@ -7306,7 +7354,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Thresh:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         if myHero:CanUseSpell(_Q) == READY and GetRealHealth(enemy) < GetDmg(_Q, myHero, enemy) and Config.Killsteal.Q and GetDistanceSqr(enemy) < myHeroSpellData[0].range^2 then
           Cast(_Q, enemy)
@@ -7336,7 +7384,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
       else
         DrawText("Active Prediction: "..predictionStringTable[activeMode.predQ], 25, WINDOW_W/8, WINDOW_H/4+75, ARGB(255, 255, 255, 255))
       end
-      for _, enemy in pairs(GetEnemyHeroes()) do
+      for _, enemy in pairs(__enemyHeroList) do
         if enemy and not enemy.dead and enemy.visible and enemy.bTargetable and GetDistanceSqr(enemy) < (myHeroSpellData[_Q].range+250)^2 then
           local CastPosition, HitChance, HeroPosition = Predict(_Q, myHero, enemy, activeMode)
           if CastPosition then
@@ -7409,7 +7457,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     myHero:MoveTo(mousePos.x, mousePos.z)
     local movePos = myHero + (Vector(mousePos) - myHero):normalized() * 900
     Cast(_W, movePos)
-    for _, enemy in pairs(GetEnemyHeroes()) do
+    for _, enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable and GetDistanceSqr(enemy) < myHeroSpellData[_R].range^2 then
         Cast(_R, enemy)
       end
@@ -7417,7 +7465,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Tristana:Killsteal()
-    for _, enemy in pairs(GetEnemyHeroes()) do
+    for _, enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local health = GetRealHealth(enemy)
         local lDmg = (UnitHaveBuff(myHero, "itemmagicshankcharge") and myHero:CalcMagicDamage(enemy, 100+0.1*myHero.ap) or 0)
@@ -7514,7 +7562,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
   function Vayne:Draw()
     if not Config.Draws.E or not sReady[_E] then return end
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and enemy.visible and not enemy.dead and enemy.bTargetable then
         local pos1 = enemy
         local pos2 = enemy - (Vector(myHero) - enemy):normalized()*(450*Config.Misc.offsetE/100)
@@ -7531,7 +7579,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   function Vayne:Tick()
     self.roll = (Config.kConfig.Combo and Config.Combo.Q) or (Config.kConfig.Harass and Config.Harass.Q and Config.Harass.manaQ/100 < myHero.mana/myHero.maxMana) or (Config.kConfig.LastHit and Config.LastHit.Q and Config.LastHit.manaQ/100 < myHero.mana/myHero.maxMana) or (Config.kConfig.LaneClear and Config.LaneClear.Q and Config.LaneClear.manaQ/100 < myHero.mana/myHero.maxMana)
     if not Config.Misc.Ea or not sReady[_E] then return end
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if ValidTarget(enemy, 650) then
         self:MakeUnitHugTheWall(enemy)
       end
@@ -7609,7 +7657,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Vayne:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local health = GetRealHealth(enemy)
         if sReady[_Q] and health < GetDmg(_Q, myHero, enemy)+GetDmg("AD", myHero, enemy)+(GetStacks(enemy) == 2 and GetDmg(_W, myHero, enemy) or 0) and Config.Killsteal.Q and ValidTarget(enemy, myHeroSpellData[0].range + myHero.range) then
@@ -7668,7 +7716,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     Config.kConfig:addParam("LastHit2Draw", "Draw Last hit toggle", SCRIPT_PARAM_ONOFF, true)
     Config.kConfig:addDynamicParam("LaneClear", "Lane Clear", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
     Config.Misc:addDynamicParam("Ea", "Auto E", SCRIPT_PARAM_ONOFF, true)
-    Config.Misc:addParam("Ee", "Enemies to E (stun)", SCRIPT_PARAM_SLICE, ceil(#GetEnemyHeroes()/2), 0, #GetEnemyHeroes(), 0)
+    Config.Misc:addParam("Ee", "Enemies to E (stun)", SCRIPT_PARAM_SLICE, ceil(#__enemyHeroList/2), 0, #__enemyHeroList, 0)
   end
 
   function Veigar:Tick()
@@ -7790,7 +7838,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Veigar:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local health = GetRealHealth(enemy)
         if sReady[_Q] and health < GetDmg(_Q, myHero, enemy) and Config.Killsteal.Q and ValidTarget(enemy, myHeroSpellData[0].range) and GetDistance(enemy) < myHeroSpellData[0].range then
@@ -8108,7 +8156,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     Config.Misc:addDynamicParam("Waa", "Auto Shield AAs with W", SCRIPT_PARAM_ONOFF, true)
     DelayAction(function()
       Config:addSubMenu("Windwall", "Windwall")
-      for _,k in pairs(GetEnemyHeroes()) do
+      for _,k in pairs(__enemyHeroList) do
         Config.Windwall:addParam(k.charName, k.charName, SCRIPT_PARAM_INFO, "")
         for i=0,3 do
           if spellData and spellData[k.charName] and spellData[k.charName][i] and spellData[k.charName][i].name and spellData[k.charName][i].name ~= "" then
@@ -8198,7 +8246,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function Yasuo:Killsteal()
-    for k,enemy in pairs(GetEnemyHeroes()) do
+    for k,enemy in pairs(__enemyHeroList) do
       if enemy and not enemy.dead and enemy.visible and enemy.bTargetable then
         local health = GetRealHealth(enemy)
         if (enemy.y > myHero.y or enemy.y < myHero.y) and Config.Killsteal.R and GetDmg(_R,myHero,enemy) > health and GetDistance(enemy) < myHeroSpellData[3].range then

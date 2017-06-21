@@ -1,10 +1,10 @@
-ScriptologyVersion       = 2.493
+ScriptologyVersion       = 2.494
 ScriptologyLoaded        = false
-ScriptologyLoadActivator = true
-ScriptologyLoadAwareness = true
+ScriptologyLoadActivator = false
+ScriptologyLoadAwareness = false
 ScriptologyFixBugsplats  = true
 ScriptologyLoadEvade     = false
-ScriptologyAutoUpdate    = true
+ScriptologyAutoUpdate    = false
 ScriptologyConfig        = scriptConfig("Scriptology Loader", "Scriptology")
 _Q, _W, _E, _R  = 0, 1, 2, 3
 local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, acos = math.min, math.max, math.cos, math.sin, math.pi, math.huge, math.ceil, math.floor, math.round, math.random, math.abs, math.deg, math.asin, math.acos
@@ -1059,10 +1059,14 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
   function UnitHaveBuff(unit, buffName)
     if unit and buffName and unit.buffCount then
+      local buffName = buffName:lower()
       for i = 1, unit.buffCount do
         local buff = unit:getBuff(i)
-        if buff and buff.valid and buff.startT <= GetGameTimer() and buff.endT >= GetGameTimer() and buff.name ~= nil and (buff.name:lower():find(buffName:lower()) or buffName:lower():find(buff.name:lower()) or buffName:lower() == buff.name:lower()) then 
-          return true
+        if buff and buff.valid --[[and buff.startT <= GetInGameTimer() and buff.endT >= GetInGameTimer()]] and buff.name ~= nil then
+          local buffNameL = buff.name:lower()
+          if (buffName == buffNameL or buffNameL:find(buffName) or buffName:find(buffNameL)) then 
+            return true
+          end
         end
       end
     end
@@ -3039,11 +3043,15 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     for _, minion in pairs(Mobs.objects) do
       if minion and not minion.dead and minion.visible and minion.bTargetable then  
         local EMinionDmg = GetDmg(_E, myHero, minion)  
-        if (UnitHaveBuff(minion, "poison") or UnitHaveBuff(minion, "venom") or Config.Misc.Enp) and EMinionDmg >= GetRealHealth(minion) and GetDistanceSqr(minion) < myHeroSpellData[2].range^2 then
+        if (self:HasPoisonousDebuff(minion) or Config.Misc.Enp) and EMinionDmg >= GetRealHealth(minion) and GetDistanceSqr(minion) < myHeroSpellData[2].range^2 then
           CastSpell(_E, minion)
         end
       end
     end
+  end
+
+  function Cassiopeia:HasPoisonousDebuff(unit)
+    return UnitHaveBuff(unit, "cassiopeiaqdebuff") or UnitHaveBuff(unit, "cassiopeiawpoison") or UnitHaveBuff(unit, "poison") or UnitHaveBuff(unit, "venom")
   end
 
   function Cassiopeia:ProcessSpell(unit, spell)
@@ -3068,7 +3076,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     if self.lastE > os.clock() then return end
       if sReady[_E] and Config.LaneClear.E and Config.LaneClear.manaE <= 100*myHero.mana/myHero.maxMana then
       for minion,winion in pairs(Mobs.objects) do
-        if winion ~= nil and (UnitHaveBuff(winion, "poison") or UnitHaveBuff(winion, "twitchdeadlyvenom")) then
+        if winion ~= nil and self:HasPoisonousDebuff(winion) then
           CastSpell(_E, winion)
         end
       end
@@ -3081,7 +3089,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
       for i, minion in pairs(Mobs.objects) do 
         if minion and not minion.dead and minion.visible and minion.bTargetable then
           local EMinionDmg = GetDmg(_E, myHero, minion)  
-          if (UnitHaveBuff(minion, "poison") or UnitHaveBuff(minion, "venom") or Config.LastHit.Enp) and EMinionDmg >= GetRealHealth(minion) and GetDistanceSqr(minion) < myHeroSpellData[2].range^2 then
+          if (self:HasPoisonousDebuff(minion) or Config.LastHit.Enp) and EMinionDmg >= GetRealHealth(minion) and GetDistanceSqr(minion) < myHeroSpellData[2].range^2 then
             CastSpell(_E, minion)
           end   
         end
@@ -3093,7 +3101,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     if myHero:CanUseSpell(_Q) == READY and Config.Combo.Q and GetDistance(Target) < myHeroSpellData[0].range then
       Cast(_Q, Target)
     end
-    if UnitHaveBuff(Target, "poison") or UnitHaveBuff(Target, "venom") then
+    if self:HasPoisonousDebuff(Target) then
       if myHero:CanUseSpell(_E) == READY and self.lastE < os.clock() and Config.Combo.E and GetDistance(Target) < myHeroSpellData[2].range then
         CastSpell(_E, Target)
       end
@@ -3109,7 +3117,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
   function Cassiopeia:Harass()
     if myHero:CanUseSpell(_E) == READY and self.lastE < os.clock() and Config.Harass.E and GetDistance(Target) < myHeroSpellData[2].range and Config.Harass.manaE <= 100*myHero.mana/myHero.maxMana then
-      if UnitHaveBuff(Target, "poison") or UnitHaveBuff(Target, "twitchdeadlyvenom") then
+      if self:HasPoisonousDebuff(Target) then
         CastSpell(_E, Target)
         return
       end
@@ -3132,7 +3140,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
           Cast(_W, enemy)
         elseif sReady[_E] and health < GetDmg(_E, myHero, enemy) and Config.Killsteal.E and GetDistance(enemy) < myHeroSpellData[2].range then
           CastSpell(_E, enemy)
-        elseif sReady[_E] and health < GetDmg(_E, myHero, enemy)*2 and (UnitHaveBuff(enemy, "poison") or UnitHaveBuff(Target, "twitchdeadlyvenom")) and Config.Killsteal.E and GetDistance(enemy) < myHeroSpellData[2].range then
+        elseif sReady[_E] and health < GetDmg(_E, myHero, enemy)*2 and self:HasPoisonousDebuff(enemy) and Config.Killsteal.E and GetDistance(enemy) < myHeroSpellData[2].range then
           CastSpell(_E, enemy)
           DelayAction(CastSpell, 0.545, {_E, enemy})
         elseif sReady[_R] and health < GetDmg(_R, myHero, enemy) and Config.Killsteal.R and GetDistance(enemy) < myHeroSpellData[3].range then
@@ -6836,7 +6844,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   function Ryze:Combo()
     for _, enemy in pairs(GetEnemyHeroes()) do
       if ValidTarget(enemy, 900) then
-        if sReady[_Q] and Config.Combo.Q then
+        if sReady[_Q] and Config.Combo.Q and GetDistanceSqr(enemy) < myHeroSpellData[_Q].range^2 then
           Cast(_Q, enemy.pos)
           return
         end
@@ -6855,7 +6863,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   function Ryze:Harass()
     local enemy = Target
     if ValidTarget(enemy, 900) then
-      if sReady[_Q] and Config.Combo.Q then
+      if sReady[_Q] and Config.Combo.Q and GetDistanceSqr(enemy) < myHeroSpellData[_Q].range^2 then
         Cast(_Q, enemy)
         return
       end
@@ -6873,8 +6881,8 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   function Ryze:LaneClear()
     for _, target in pairs(Mobs.objects) do
       if target and not target.dead and target.visible then
-        if sReady[_Q] and Config.Combo.Q then
-          Cast(_Q, target.pos)
+        if sReady[_Q] and Config.Combo.Q and GetDistanceSqr(target) < myHeroSpellData[_Q].range^2 then
+          Cast(_Q, target)
           return
         end
         if sReady[_E] and Config.Combo.E and GetDistanceSqr(target) < myHeroSpellData[_E].range^2 then
@@ -8575,9 +8583,3 @@ class "ScriptologyScriptUpdate" -- {
   end
 
 -- }
--- ScriptStatus
-assert(load(Base64Decode("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"), nil, "bt", _ENV))() ScriptStatus("SFIHGHMGEEK") 
-assert(load(Base64Decode("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"), nil, "bt", _ENV))()
-TrackerLoad("tUcNLPVbjFpgFIxf")
--- ScriptStatus
---

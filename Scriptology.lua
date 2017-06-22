@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.495
+ScriptologyVersion       = 2.496
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = false
 ScriptologyLoadAwareness = false
@@ -106,14 +106,14 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
       local AddToEnemyHeroes = 
         function(unit)
           count = count + 1
-          _enemyHeroes[count] = unit
+          __enemyHeroList[count] = unit
         end
       local RemoveFromEnemyHeroes = 
         function(networkID)
           for i = 1, count do
-            local hero = _enemyHeroes[i]
+            local hero = __enemyHeroList[i]
             if hero and hero.networkID == networkID then
-              table.remove(_enemyHeroes, i)
+              table.remove(__enemyHeroList, i)
               count = count - 1
               break;
             end
@@ -698,6 +698,10 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     DrawLine(x, y+height*0.5, x+width, y+height*0.5, height, color)
   end
 
+  local function RoundToServerTick(x)
+    return ceil(x * 30 - .5) / 30
+  end
+
   function GetDistanceSqr(p1, p2)
     if not p1 then return math.huge end
     p2 = p2 or myHero
@@ -845,7 +849,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   function DrawDmgOnHpBar(hero)
     if not Config.Draws.DMG then return end
     if hero and hero.valid and not hero.dead and hero.visible and hero.bTargetable then
-      local kdt = killDrawTable[hero.networkID]
+      local kdt = killDrawTable[hero.networkID] or {}
       for _=1, #kdt do
         local vars = kdt[_]
         if vars and vars[1] then
@@ -1104,7 +1108,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
       local buffName = buffName:lower()
       for i = 1, unit.buffCount do
         local buff = unit:getBuff(i)
-        if buff and buff.valid --[[and buff.startT <= GetInGameTimer() and buff.endT >= GetInGameTimer()]] and buff.name ~= nil then
+        if buff and buff.valid and buff.startT <= GetGameTimer() and buff.endT >= GetGameTimer() and buff.name ~= nil then
           local buffNameL = buff.name:lower()
           if (buffName == buffNameL or buffNameL:find(buffName) or buffName:find(buffNameL)) then 
             return true
@@ -6317,6 +6321,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   function Riven:__init()
     --self:LoadOrb()
     self.QCast = 0
+    self.LastQTimer = 0
     self.doQ = false
     self.doW = false
     self.doH = false
@@ -6449,7 +6454,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
         end 
       end
     end
-    if sReady[_W] and (Config.Misc.Wae <= EnemiesAround(myHero, myHeroSpellData[_W].width)) then
+    if sReady[_W] and Config.Misc.Wa and (Config.Misc.Wae <= EnemiesAround(myHero, myHeroSpellData[_W].width)) then
       Cast(_W)
     end
   end
@@ -6457,13 +6462,13 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   function Riven:ProcessAttack(unit, spell)
     if unit and unit.isMe and spell and spell.name then
       local target = self:GetTarget()
-      if spell.name:lower():find("attack") then
+      if spell.name == "MadeUpShitForMyOwnCallbackProc" then
         if target and not target.dead and target.visible and target.bTargetable then
           if self.doW and myHero:CanUseSpell(_W) == 0 then
             CastSpell(_W)
           elseif self.doH and GetHydraSlot() and myHero:CanUseSpell(GetHydraSlot()) == 0 then
             CastSpell(GetHydraSlot())
-          elseif GetDistanceSqr(target) < myHeroSpellData[_Q].range^2 and self.doQ and myHero:CanUseSpell(_Q) == READY then
+          elseif GetDistanceSqr(target) < myHeroSpellData[_Q].range^2 and self.doQ and myHero:CanUseSpell(_Q) == READY and self.LastQTimer < os.clock() then
             CastSpell(_Q, target.x, target.z)
           end
         end
@@ -6479,7 +6484,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
             end
           end
         end
-        if ValidTarget(target) and self.doQ then
+        if ValidTarget(target) and self.doQ and self.LastQTimer < os.clock() then
           CastSpell(_Q, target.x, target.z)
         end
       elseif spell.name == "RivenTriCleave" then
@@ -6508,8 +6513,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
             end
           end
         end
-        self:ResetAA()
-        if target and not target.dead and target.visible and target.bTargetable and GetDistanceSqr(target) < myHeroSpellData[_Q].range^2 and self.doQ and myHero:CanUseSpell(_Q) == READY then
+        if target and not target.dead and target.visible and target.bTargetable and GetDistanceSqr(target) < myHeroSpellData[_Q].range^2 and self.doQ and myHero:CanUseSpell(_Q) == READY and self.LastQTimer < os.clock() then
           CastSpell(_Q, target.x, target.z)
         end
       end
@@ -6534,7 +6538,6 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
             end
           end
         end, windUp + GetLatency() / 2000)
-        self:ResetAA()
       elseif spell.name == "RivenTriCleave" then
         self.QDelay = os.clock()
         self:ResetAA()
@@ -6545,7 +6548,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
             if target and not target.dead and target.visible and target.bTargetable then
               CastSpell(_R)
               DelayAction(function() 
-                if target and not target.dead and target.visible and target.bTargetable and GetDistance(target) < myHeroSpellData[0].range then
+                if target and not target.dead and target.visible and target.bTargetable and GetDistance(target) < myHeroSpellData[0].range and self.LastQTimer < os.clock() then
                   CastSpell(_Q, target.x, target.z)
                 end
               end, 0.137)
@@ -6565,14 +6568,12 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
         end, windUp + GetLatency() / 2000)
       elseif spell.name == "rivenizunablade" then
         Config.Combo.Rf = false
-        self:ResetAA()
         DelayAction(function() 
           if target and not target.dead and target.visible and target.bTargetable and GetDistanceSqr(target) < myHeroSpellData[_Q].range^2 and self.doQ and myHero:CanUseSpell(_Q) == READY then
             CastSpell(_Q, target.x, target.z)
           end
         end, windUp + GetLatency() / 2000)
       elseif spell.name == "ItemTiamatCleave" then
-        self:ResetAA()
         DelayAction(function()
           if target and not target.dead and target.visible and target.bTargetable and GetDistanceSqr(target) < myHeroSpellData[_Q].range^2 and self.doQ and myHero:CanUseSpell(_Q) == READY then
             CastSpell(_Q, target.x, target.z)
@@ -6597,11 +6598,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
 
   function Riven:CreateObj(object)
     if object and object.valid and object.name and GetDistance(object) < 150 and object.name:find("Riven_Base_Q_") and object.name:find("_detonate") and self.doQ then
-      if myHero.level >= 5 then
-        self.CastDance()
-      else
-        myHero:MoveTo(mousePos.x, mousePos.z)
-      end
+      self:DoRivenShit()
       for i=0, GetLatency()+70 do
         DelayAction(ResetAA, i/1000)
       end
@@ -6613,17 +6610,27 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
       local target = self:GetTarget()
       if (ani == "Spell1a" or ani == "Spell1b" or ani == "Spell1c") then
         self.QCast = ani:find("a") and 1 or ani:find("b") and 2 or ani:find("c") and 3 or 0
+        self.LastQTimer = os.clock() + 0.133
         DelayAction(function() if myHero:CanUseSpell(_Q) ~= READY then self.QCast = 0 end end, 4)
       elseif ani == "Spell2" then
       elseif ani == "Spell3" then
       elseif ani == "Spell4a" then
       elseif ani == "Spell4b" then
+      elseif ani:find("Attack") or ani:find("Crit") then
+        DelayAction(function() 
+          self:ProcessAttack(myHero, {name = "MadeUpShitForMyOwnCallbackProc"})
+        end, RoundToServerTick(0.26666667699 / myHero.attackSpeed))
       end
     end
   end
 
-  function Riven:CastDance()
-    DoEmote(0)
+  function Riven:DoRivenShit()
+    -- DoEmote(0) -- rip emote cancel :(
+    local target = self:GetTarget()
+    target = target and Vector(target) or Vector(myHero.visionPos)
+    target = myHero + (myHero - target):normalized() * 125
+    myHero:MoveTo(target.x, target.z)
+    self:ResetAA()
   end
 
   function Riven:CalculateDamage()

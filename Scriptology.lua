@@ -1,4 +1,4 @@
-ScriptologyVersion       = 2.496
+ScriptologyVersion       = 2.497
 ScriptologyLoaded        = false
 ScriptologyLoadActivator = false
 ScriptologyLoadAwareness = false
@@ -5342,7 +5342,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
     self.maxObjects = 0
     for k=1,objManager.maxObjects,1 do
       local object = objManager:getObject(k)
-      if object and object.valid and object.type == "obj_AI_Minion" and object.team ~= myHero.team and object.name and not object.name:find("Ward") and (object.name:find('Minion_T') or object.name:find('Blue') or object.name:find('Red') or (object.team == TEAM_NEUTRAL and object.health < 100000 and not object.name:find("Guardian") and not object.name:find("Shield")) or object.name:find('Bilge') or object.name:find('BW')) then
+      if object and object.valid and object.type == "AIMinion" and object.team ~= myHero.team and object.name and not object.name:find("Ward") and (object.name:find('Minion_T') or object.name:find('Blue') or object.name:find('Red') or (object.team == TEAM_NEUTRAL and object.health < 100000 and not object.name:find("Guardian") and not object.name:find("Shield")) or object.name:find('Bilge') or object.name:find('BW')) then
         self.maxObjects = self.maxObjects + 1
         self.objects[self.maxObjects] = object
       end
@@ -5352,7 +5352,7 @@ local min, max, cos, sin, pi, huge, ceil, floor, round, random, abs, deg, asin, 
   end
 
   function MinionManager:CreateObj(object)
-    if object and object.valid and object.type == "obj_AI_Minion" and object.team ~= myHero.team and object.name and not object.name:find("Ward") and (object.name:find('Minion_T') or object.name:find('Blue') or object.name:find('Red') or (object.team == TEAM_NEUTRAL and object.health < 100000 and not object.name:find("Guardian") and not object.name:find("Shield")) or object.name:find('Bilge') or object.name:find('BW')) then
+    if object and object.valid and object.type == "AIMinion" and object.team ~= myHero.team and object.name and not object.name:find("Ward") and (object.name:find('Minion_T') or object.name:find('Blue') or object.name:find('Red') or (object.team == TEAM_NEUTRAL and object.health < 100000 and not object.name:find("Guardian") and not object.name:find("Shield")) or object.name:find('Bilge') or object.name:find('BW')) then
       local deadPlace = self:FindDeadPlace()
       if deadPlace then
         self.objects[deadPlace] = object

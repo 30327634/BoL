@@ -35,7 +35,7 @@ class "UPL"
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 9000.2
+		_G.UPLversion = 9000.3
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0
@@ -214,7 +214,6 @@ end
 
 function UPL:GetTPSpell(data)
 	require "TRPrediction"
-	print(data.collision and ((myHero.charName == "Lux" or myHero.charName == "Veigar") and 1 or 0) or math.huge)
 	return TR_BindSS({type = ({["linear"] = 'IsLinear', ["circular"] = "IsRadial", ["cone"] = "IsConic"})[data.type], delay = data.delay, range = data.range, width = data.width, radius = data.width * .5, angle = data.angle, speed = data.speed, allowedCollisionCount = data.collision and ((myHero.charName == "Lux" or myHero.charName == "Veigar") and 1 or 0) or math.huge})
 end
 

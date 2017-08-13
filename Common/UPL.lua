@@ -35,7 +35,7 @@ class "UPL"
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 9000.1
+		_G.UPLversion = 9000.2
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0
@@ -69,6 +69,7 @@ function UPL:__init()
 				table.insert(self.predTable, {pPred[1], pPred[2], pPred[4], pPred[5], pPred[6], pPred[7]})
 			end
 		end
+		self.TimeRequest = nil	
 		self.slotToString = {[-6] = "P", [-5] = "R2", [-4] = "E2", [-3] = "W2", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R"}
 		self:Update()
 		DelayAction(function() self:Loaded() end, 0.25)
@@ -213,7 +214,8 @@ end
 
 function UPL:GetTPSpell(data)
 	require "TRPrediction"
-	return TR_BindSS({type = ({["linear"] = 'IsLinear', ["circular"] = "IsRadial", ["cone"] = "IsConic"})[data.type], delay = data.delay, range = data.range, width = data.width, radius = data.width * .5, angle = data.angle, speed = data.speed})
+	print(data.collision and ((myHero.charName == "Lux" or myHero.charName == "Veigar") and 1 or 0) or math.huge)
+	return TR_BindSS({type = ({["linear"] = 'IsLinear', ["circular"] = "IsRadial", ["cone"] = "IsConic"})[data.type], delay = data.delay, range = data.range, width = data.width, radius = data.width * .5, angle = data.angle, speed = data.speed, allowedCollisionCount = data.collision and ((myHero.charName == "Lux" or myHero.charName == "Veigar") and 1 or 0) or math.huge})
 end
 
 function UPL:GetSPSpell(data)
@@ -223,7 +225,17 @@ end
 
 function UPL:AddToMenu(Config, Name)
 	self.Config = Config or scriptConfig("Prediction Handler (UPL)", "Prediction"..myHero.charName)
-	if Config then self.Config:addSubMenu(Name or "Prediction Handler (UPL)", "Prediction"..myHero.charName) self.Config = self.Config["Prediction"..myHero.charName] end
+	if Config then 
+		self.Config:addSubMenu(Name or "Prediction Handler (UPL)", "Prediction"..myHero.charName) 
+		self.Config = self.Config["Prediction"..myHero.charName] 
+		if not self.TimeRequest then
+			self.Config:addParam("TimeRequest", "Time between Predictions", SCRIPT_PARAM_SLICE, 0, 0, 0.0333, 5)
+			self.TimeRequest = self.Config.TimeRequest
+			self.Config:setCallback("TimeRequest", function(var)
+				self.TimeRequest = self.Config.TimeRequest
+			end)
+		end
+	end
 	DelayAction(function()
 		for i, v in pairs(self.Spells) do
 			for i=-6, 4 do
@@ -303,7 +315,7 @@ function UPL:SetActive(slot, pred)
 end
 
 function UPL:ValidRequest(x)
-	if os.clock() - self.LastRequest < self:TimeRequest(x) then
+	if os.clock() - self.LastRequest < (self.TimeRequest or 0.001) then
 		return false
 	else
 		self.LastRequest = os.clock()
@@ -311,18 +323,8 @@ function UPL:ValidRequest(x)
 	end
 end
 
-function UPL:TimeRequest(aPred)
-	if aPred == "VPrediction" or aPred == "SPrediction" then
-		return 0.001
-	elseif aPred == "DivinePred" then
-		return 0.1
-	else
-		return 0.01
-	end
-end
-
 function UPL:PredictHealth(object, time)
-	return FHPrediction and FHPrediction.PredictHealth(object, time) or VP and VP:GetPredictedHealth(unit, time) or object.health
+	return FHPrediction and FHPrediction.PredictHealth(object, time) or TRPrediction and TRPrediction:GetPredictedHealth(unit, time) or VP and VP:GetPredictedHealth(unit, time) or object.health
 end
 
 function UPL:FHPredict(spell, source, target)
@@ -401,18 +403,13 @@ function UPL:VPPredict(spell, source, target)
 end
 
 function UPL:TPPredict(spell, source, target)
-	local coll = (myHero.charName == "Lux" or myHero.charName == "Veigar") and 1 or self.spellData[spell].collision
-	if type(coll) == "boolean" then
-		coll = coll and 0 or math.huge
-	end
 	if not self.Spells.TP[spell] or self.Modified[spell] then
 		self.Spells.TP[spell] = self["GetTPSpell"](self, self.spellData[spell])
 	end
 	local spell = self.Spells.TP[spell]
 	local pos, hc, rcoll = TRPrediction:GetPrediction(spell, target, source)
-	if not pos then return pos, -1 end
-	local rcoll, rcollc = TRPrediction:IsCollision(spell, target, source, pos)
-	return pos, (rcoll and rcollc > coll) and -1 or hc
+	--print(rcoll)
+	return pos, pos and hc or -1
 end
 
 function UPL:SPPredict(spell, source, target)

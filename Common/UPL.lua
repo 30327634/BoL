@@ -35,7 +35,7 @@ class "UPL"
 
 function UPL:__init()
 	if not _G.UPLloaded then
-		_G.UPLversion = 9000.3
+		_G.UPLversion = 99000.4
 		_G.UPLautoupdate = true
 		_G.UPLloaded = false
 		self.LastRequest = 0
@@ -45,7 +45,6 @@ function UPL:__init()
 			FH={},
 			KP={},
 			HP={},
-			DP={},
 			VP={},
 			SP={},
 			TP={}
@@ -58,10 +57,9 @@ function UPL:__init()
 			{"FH", "FHPrediction", function() return FHPrediction ~= nil or FileExist(LIB_PATH .. "FHPrediction.lua") end, 1.1, 1, 2, 2},
 			{"KP", "KPrediction", function() return FileExist(LIB_PATH .. "KPrediction.lua") end, 1.75, 0, 3, 2},
 			{"HP", "HPrediction", function() return FileExist(LIB_PATH .. "HPrediction.lua") end, 1.05, 0, 3, 2},
-			{"DP", "DivinePred", function() return FileExist(LIB_PATH .. "DivinePred.lua") and FileExist(LIB_PATH .. "DivinePred.luac") end, 50, 0, 100, 0},
 			{"VP", "VPrediction", function() return FileExist(LIB_PATH .. "VPrediction.lua") end, 2, 1, 3, 0},
 			{"SP", "SPrediction", function() return FileExist(LIB_PATH .. "SPrediction.lua") end, 1, 1, 3, 0},
-			{"TP", "TRPrediction", function() return FileExist(LIB_PATH .. "TRPrediction.lua") end, 1, 0, 2.5, 1}
+			{"TP", "TRPrediction", function() return FileExist(LIB_PATH .. "TRPrediction.lua") end, 0, 0, 0, 0}
 		}
 		for i=1, #possiblePredictions do
 			local pPred = possiblePredictions[i]
@@ -195,18 +193,6 @@ function UPL:GetKPSpell(spell)
 	end
 end
 
-function UPL:GetDPSpell(spell)
-	require "DivinePred"
-	local col = spell.collision and ((myHero.charName=="Lux" or myHero.charName=="Veigar") and 1 or 0) or math.huge
-	if spell.type == "circular" then
-		return CircleSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
-	elseif spell.type == "cone" then
-		return ConeSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
-	else
-		return LineSS(spell.speed, spell.range, spell.width, spell.delay * 1000, col)
-	end
-end
-
 function UPL:GetVPSpell(data)
 	require "VPrediction"
 	return data
@@ -214,7 +200,7 @@ end
 
 function UPL:GetTPSpell(data)
 	require "TRPrediction"
-	return TR_BindSS({type = ({["linear"] = 'IsLinear', ["circular"] = "IsRadial", ["cone"] = "IsConic"})[data.type], delay = data.delay, range = data.range, width = data.width, radius = data.width * .5, angle = data.angle, speed = data.speed, allowedCollisionCount = data.collision and ((myHero.charName == "Lux" or myHero.charName == "Veigar") and 1 or 0) or math.huge})
+	return TR_BindSS({type = ({["linear"] = 'IsLinear', ["circular"] = "IsRadial", ["cone"] = "IsConic"})[data.type], delay = data.delay, range = data.range, width = data.width, angle = data.angle, speed = data.speed, allowedCollisionCount = data.collision and ((myHero.charName == "Lux" or myHero.charName == "Veigar") and 1 or 0) or math.huge})
 end
 
 function UPL:GetSPSpell(data)
@@ -292,6 +278,11 @@ function UPL:AddSpellToMenu(slot)
 			self.Config:modifyParam(slotString.."HitChance", "min", self.predTable[i][4])
 			self.Config:modifyParam(slotString.."HitChance", "max", self.predTable[i][5])
 			self.Config:modifyParam(slotString.."HitChance", "idc", self.predTable[i][6])
+			if self:ActivePred(slot) == "TRPrediction" then
+				self.Config:modifyParam(slotString.."HitChance", "text", "HitChance: AUTOMATIC")
+			else
+				self.Config:modifyParam(slotString.."HitChance", "text", "HitChance")
+			end
 			self.Config[slotString.."HitChance"] = self.predTable[i][3]
 		end
 		self.Config:setCallback(slotString.."Prediction", function(i)SetupMenu(i)end)SetupMenu(self.Config[slotString.."Prediction"])
@@ -359,21 +350,6 @@ function UPL:HPPredict(spell, source, target)
 	return HP:GetPredict(spell, target, source, col)
 end
 
-function UPL:DPPredict(spell, source, target)
-	if not DP then 
-		DP = DivinePred()
-		for i, v in pairs(self.Spells.DP) do
-			local spellString = self.slotToString[i]
-			DP:bindSS(spellString, self.Spells.DP[i], 1)
-			self.Spells.DP[i] = spellString
-		end
-	end
-	local status, hitPos, perc = DP:predict(self.Spells.DP[spell], target, Vector(source))
-	if hitPos then
-		return hitPos, perc, hitPos
-	end
-end
-
 function UPL:VPPredict(spell, source, target)
 	if not self.Spells.VP[spell] or self.Modified[spell] then
 		self.Spells.VP[spell] = self["GetVPSpell"](self, self.spellData[spell])
@@ -402,13 +378,18 @@ function UPL:VPPredict(spell, source, target)
 end
 
 function UPL:TPPredict(spell, source, target)
+	local pos
+	local hit
 	if not self.Spells.TP[spell] or self.Modified[spell] then
 		self.Spells.TP[spell] = self["GetTPSpell"](self, self.spellData[spell])
 	end
 	local spell = self.Spells.TP[spell]
-	local pos, hc, rcoll = TRPrediction:GetPrediction(spell, target, source)
-	--print(rcoll)
-	return pos, pos and hc or -1
+	if spell.aoe then
+		pos, hit = TRPrediction:GetAOEPrediction(spell, target, source)
+	else
+		pos, hit = TRPrediction:GetPrediction(spell, target, source)
+	end
+	return pos, hit or -1
 end
 
 function UPL:SPPredict(spell, source, target)
